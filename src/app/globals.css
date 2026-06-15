@@ -1,14 +1,99 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FFFFE6;
-  --foreground: #000000;
-  /* Colores corporativos */
-  --color-primary: #8459F6;
-  --color-secondary: #EA6F48;
+  --background: #FFFFF5;
+  --foreground: #0F0F0F;
+
+  --paco-orange: #FF653A;
+  --paco-purple: #8C52FF;
+  --paco-cream:  #FFFFF5;
+  --paco-dark:   #0F0F0F;
+
+  --padding-mobile:  1rem;
+  --padding-tablet:  1.5rem;
+  --padding-desktop: 3rem;
+}
+
+@theme inline {
+  --color-background:  var(--background);
+  --color-foreground:  var(--foreground);
+  --color-paco-orange: var(--paco-orange);
+  --color-paco-purple: var(--paco-purple);
+  --color-paco-cream:  var(--paco-cream);
+  --color-paco-dark:   var(--paco-dark);
+
+  --font-now:    var(--font-now), system-ui, sans-serif;
+  --font-chunko: var(--font-chunko), Impact, sans-serif;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
+  font-family: var(--font-now);
+}
+
+@layer components {
+
+  /* ===== Responsive padding ===== */
+  .padding-responsive {
+    @apply mx-auto;
+    max-width: 80rem;
+    padding-left:  var(--padding-mobile);
+    padding-right: var(--padding-mobile);
+  }
+  @media (min-width: 768px) {
+    .padding-responsive {
+      padding-left:  var(--padding-tablet);
+      padding-right: var(--padding-tablet);
+    }
+  }
+  @media (min-width: 1024px) {
+    .padding-responsive {
+      padding-left:  var(--padding-desktop);
+      padding-right: var(--padding-desktop);
+    }
+  }
+
+  /* ============================================= */
+  /* =================== HEADER ================== */
+  /* ============================================= */
+  .header {
+    @apply fixed inset-x-0 top-0 z-50 px-4 py-3 transition-transform duration-300 ease-in-out md:px-6;
+  }
+  .header-pill {
+    @apply mx-auto flex max-w-5xl items-center justify-between rounded-2xl border border-black/5 bg-paco-cream px-4 py-3 shadow-[0_0.5rem_2rem_rgba(0,0,0,0.12)] md:px-5;
+  }
+  .header-logo {
+    @apply flex shrink-0 items-center transition-opacity hover:opacity-80;
+  }
+  .header-logo img {
+    @apply h-9 w-auto md:h-10;
+  }
+
+  .navlink {
+    @apply rounded-md px-3.5 py-2 text-sm font-medium uppercase tracking-[0.12em] text-black/55 transition hover:bg-paco-purple/10 hover:text-paco-purple;
+  }
+  .navlink-external {
+    @apply text-paco-purple;
+  }
+
+  /* ============================================= */
+  /* ================= BURGER ==================== */
+  /* ============================================= */
+  .burger {
+    @apply relative h-7 w-7 cursor-pointer focus:outline-none md:hidden;
+  }
+  .burger-bar {
+    @apply absolute left-0 h-[3px] w-7 rounded bg-paco-orange transition-all duration-200 ease-in-out;
+  }
+
+  /* ============================================= */
+  /* =================== HERO ==================== */
+  /* ============================================= */
+  .hero-dot {
+    @apply h-2.5 w-2.5 cursor-pointer rounded-full bg-white/50 shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300 hover:bg-white/80;
+  }
+  .hero-dot-active {
+    @apply w-6 bg-white;
+  }
 }

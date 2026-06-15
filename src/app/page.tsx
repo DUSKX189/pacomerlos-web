@@ -1,7 +1,12 @@
+import HeroCarousel from '@/components/layout/Hero/HeroCarousel';
+import MainBanner from '@/components/layout/Hero/MainBanner';
+
+export const dynamic = 'force-dynamic';
+
 export default function Home() {
   return (
-    <div className="mx-auto max-w-6xl px-6 py-16">
-      <h1 className="text-4xl font-bold">Pacomerlos</h1>
-    </div>
+    <HeroCarousel>
+      <MainBanner />
+    </HeroCarousel>
   );
 }
