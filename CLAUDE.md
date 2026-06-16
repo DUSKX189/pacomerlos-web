@@ -15,6 +15,15 @@ Slides del banner hero. Campos relevantes:
 - id, sort, status (draft|published), is_featured (bool)
 - title, description, button_function
 - img_mobile, img_tablet, img_desktop (UUIDs de assets de Directus)
+- title_color_preset (hex predefinido), title_color_custom (hex personalizado validado)
+- description_color_preset (hex predefinido), description_color_custom (hex personalizado validado)
+
+Reglas de color (a aplicar en el adaptador del frontend):
+
+- El frontend resuelve el color final con esta prioridad: custom > preset > fallback
+- title:       title_color_custom       ?? title_color_preset       ?? "#0F0F0F"
+- description: description_color_custom ?? description_color_preset ?? "#0F0F0F"
+- El componente nunca recibe null en los colores — el fallback garantiza un valor siempre válido
 
 ### paquitos_data
 

@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 const DIRECTUS_IMG_URL = process.env.NEXT_PUBLIC_DIRECTUS_IMG_URL;
 
 export interface Slide {
@@ -10,41 +12,61 @@ export interface Slide {
   img_mobile: string;
   img_tablet: string;
   img_desktop: string;
+  title_color: string;
+  description_color: string;
 }
 
 function assetUrl(uuid: string) {
   return `${DIRECTUS_IMG_URL}${uuid}`;
 }
 
-export default function CarouselSlide({ slide }: { slide: Slide }) {
+interface CarouselSlideProps {
+  slide: Slide;
+  priority?: boolean;
+}
+
+export default function CarouselSlide({ slide, priority = false }: CarouselSlideProps) {
   return (
-    <div
-      className="relative h-full w-full bg-cover bg-center [background-image:var(--slide-bg-mobile)] md:[background-image:var(--slide-bg-tablet)] lg:[background-image:var(--slide-bg-desktop)]"
-      style={
-        {
-          '--slide-bg-mobile': `url('${assetUrl(slide.img_mobile)}')`,
-          '--slide-bg-tablet': `url('${assetUrl(slide.img_tablet)}')`,
-          '--slide-bg-desktop': `url('${assetUrl(slide.img_desktop)}')`,
-        } as React.CSSProperties
-      }
-    >
-      <div className="absolute inset-0 z-10 flex flex-col items-start justify-end padding-responsive pb-16 text-foreground">
-        <h2 className="font-chunko text-4xl uppercase leading-tight md:text-5xl lg:text-6xl">
+    <div className="relative h-full w-full overflow-hidden">
+      <Image
+        src={assetUrl(slide.img_mobile)}
+        alt=""
+        fill
+        sizes="100vw"
+        priority={priority}
+        className="object-cover md:hidden"
+      />
+      <Image
+        src={assetUrl(slide.img_tablet)}
+        alt=""
+        fill
+        sizes="100vw"
+        priority={priority}
+        className="hidden object-cover md:block lg:hidden"
+      />
+      <Image
+        src={assetUrl(slide.img_desktop)}
+        alt=""
+        fill
+        sizes="100vw"
+        priority={priority}
+        className="hidden object-cover lg:block"
+      />
+      <div className="absolute inset-0 z-10 flex flex-col items-start justify-end padding-responsive pb-16 md:items-center md:justify-center md:pb-0 md:text-center">
+        <h2
+          className="font-chunko text-4xl uppercase leading-tight md:text-5xl lg:text-8xl"
+          style={{ color: slide.title_color }}
+        >
           {slide.title}
         </h2>
         {slide.description && (
-          <p className="mt-3 max-w-lg text-base text-foreground md:text-lg">
+          <p
+            className="mt-3 max-w-lg text-xl md:text-2xl"
+            style={{ color: slide.description_color }}
+          >
             {slide.description}
           </p>
         )}
-        {/* {slide.button_function && (
-          <a
-            href={slide.button_function}
-            className="mt-6 inline-block rounded-full bg-paco-orange px-6 py-3 text-sm font-medium uppercase tracking-widest text-white transition hover:bg-paco-orange/85"
-          >
-            Ver más
-          </a>
-        )} */}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
 
 const AUTOPLAY_MS = 8000;
 const DRAG_THRESHOLD = 0.15;
+const TRANSITION_MS = 700;
 
 interface HeroCarouselProps {
   children: ReactNode;
@@ -19,21 +20,52 @@ interface HeroCarouselProps {
 export default function HeroCarousel({ children }: HeroCarouselProps) {
   const slides = Children.toArray(children);
   const count = slides.length;
+  const loop = count > 1;
+  const displayed = loop
+    ? [slides[count - 1], ...slides, slides[0]]
+    : slides;
+  const firstReal = loop ? 1 : 0;
+  const lastReal = loop ? count : Math.max(count - 1, 0);
+  const cloneStart = 0;
+  const cloneEnd = loop ? count + 1 : -1;
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(firstReal);
+  const [withTransition, setWithTransition] = useState(true);
   const [dragDelta, setDragDelta] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
 
   const pointerStartX = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  const advance = useCallback(() => {
+    setWithTransition(true);
+    setIndex(i => i + 1);
+  }, []);
+
+  const retreat = useCallback(() => {
+    setWithTransition(true);
+    setIndex(i => i - 1);
+  }, []);
+
+  useEffect(() => {
+    if (!loop || isDragging) return;
+    if (index !== cloneEnd && index !== cloneStart) return;
+    const target = index === cloneEnd ? firstReal : lastReal;
+    const snapTimer = setTimeout(() => {
+      setWithTransition(false);
+      setIndex(target);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => setWithTransition(true));
+      });
+    }, TRANSITION_MS);
+    return () => clearTimeout(snapTimer);
+  }, [index, isDragging, loop, cloneEnd, cloneStart, firstReal, lastReal]);
+
   const startAutoplay = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
-    if (count <= 1) return;
-    timerRef.current = setInterval(() => {
-      setIndex(prev => (prev + 1) % count);
-    }, AUTOPLAY_MS);
-  }, [count]);
+    if (!loop) return;
+    timerRef.current = setInterval(advance, AUTOPLAY_MS);
+  }, [loop, advance]);
 
   useEffect(() => {
     startAutoplay();
@@ -45,14 +77,16 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
   const goTo = useCallback(
     (i: number) => {
       if (count === 0) return;
-      setIndex(((i % count) + count) % count);
+      const target = ((i % count) + count) % count;
+      setWithTransition(true);
+      setIndex(target + firstReal);
       startAutoplay();
     },
-    [count, startAutoplay],
+    [count, firstReal, startAutoplay],
   );
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (count <= 1) return;
+    if (!loop) return;
     pointerStartX.current = e.clientX;
     setIsDragging(true);
     setDragDelta(0);
@@ -68,8 +102,8 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
     if (!isDragging) return;
     const width = e.currentTarget.offsetWidth || 1;
     const ratio = dragDelta / width;
-    if (ratio < -DRAG_THRESHOLD) goTo(index + 1);
-    else if (ratio > DRAG_THRESHOLD) goTo(index - 1);
+    if (ratio < -DRAG_THRESHOLD) advance();
+    else if (ratio > DRAG_THRESHOLD) retreat();
     else startAutoplay();
     setIsDragging(false);
     setDragDelta(0);
@@ -77,6 +111,7 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
   };
 
   const transform = `translateX(${-index * 100}%) translateX(${isDragging ? dragDelta : 0}px)`;
+  const activeDot = loop ? (((index - firstReal) % count) + count) % count : index;
 
   return (
     <section
@@ -88,21 +123,27 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
       onPointerCancel={onPointerEnd}
     >
       <div
-        className={`flex h-full w-full ${isDragging ? '' : 'transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)]'
-          }`}
+        className={`flex h-full w-full ${
+          isDragging || !withTransition
+            ? ''
+            : 'transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)]'
+        }`}
         style={{ transform }}
       >
-        {slides.map((slide, i) => (
-          <div
-            key={i}
-            className="h-full w-full shrink-0"
-            aria-roledescription="slide"
-            aria-label={`${i + 1} de ${count}`}
-            aria-hidden={i !== index}
-          >
-            {slide}
-          </div>
-        ))}
+        {displayed.map((slide, i) => {
+          const realIndex = loop ? (((i - firstReal) % count) + count) % count : i;
+          return (
+            <div
+              key={i}
+              className="h-full w-full shrink-0"
+              aria-roledescription="slide"
+              aria-label={`${realIndex + 1} de ${count}`}
+              aria-hidden={i !== index}
+            >
+              {slide}
+            </div>
+          );
+        })}
       </div>
 
       {count > 1 && (
@@ -113,8 +154,8 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
               type="button"
               onClick={() => goTo(i)}
               aria-label={`Ir al banner ${i + 1}`}
-              aria-current={i === index}
-              className={`hero-dot ${i === index ? 'hero-dot-active' : ''}`}
+              aria-current={i === activeDot}
+              className={`hero-dot ${i === activeDot ? 'hero-dot-active' : ''}`}
             />
           ))}
         </div>

@@ -34,7 +34,8 @@ export default function MainBanner() {
           width={588}
           height={120}
           priority
-          className="h-auto w-[min(588px,92vw)]"
+          draggable={false}
+          className="h-auto w-[min(588px,92vw)] select-none pointer-events-none"
         />
       </div>
     </div>
