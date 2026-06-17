@@ -31,6 +31,7 @@ Catálogo de productos. Campos:
 
 - id, name, tagline, image_main (UUID)
 - general_description, interior_description, topping_description
+- primary_color, secondary_color (string, código hex — pueden ser null)
 
 ## Flujo de aprobación de contenido (draft → published)
 
@@ -157,3 +158,45 @@ en el servidor durante el render. Esto evita el "flash" de hidratación
 la misma ventana de revalidación ven el mismo fondo (aceptable; si en el
 futuro se quiere aleatoriedad por usuario habrá que volver a cliente o usar
 cookie con seed).
+
+## Próximos pasos
+
+### Página `/sabores`
+
+Diseñar y construir una nueva ruta `/sabores` (App Router: `src/app/sabores/page.tsx`)
+que sirva como vitrina completa del catálogo de paquitos.
+
+Requisitos funcionales:
+
+- Obtiene **todos** los paquitos desde `paquitos_data` vía `getPaquitos()`
+  (ya disponible en `src/lib/directus/queries.ts`).
+- Lista cada paquito mostrando su `image_main` y toda la información asociada:
+  `name`, `tagline`, `general_description`, `interior_description`,
+  `topping_description`. `primary_color` y `secondary_color` se usan para
+  acentos visuales (títulos, fondos, separadores, etc.).
+- Server Component con ISR (`revalidate: 30`) — mismo patrón que `src/app/page.tsx`.
+- Cada paquito debe tener un **anchor estable** que permita el deep-linking
+  desde el carrusel de la home: por ejemplo, envolver cada bloque con
+  `id={`paquito-${paquito.id}`}` o un slug derivado del `name`.
+
+### Enlaces desde la home
+
+Dos puntos a actualizar en `src/components/ui/LangingPage/`:
+
+1. **`paquitosGalery.tsx`** — añadir un `Link` (`next/link`) hacia `/sabores`
+   como CTA general de la sección (ubicación a decidir: bajo el carrusel o
+   como botón al lado del título "Conoce cada uno").
+
+2. **`paquitoHint.tsx`** — envolver el contenido del hint con un `Link` que
+   apunte a `/sabores#paquito-<id>` (o el slug que se elija). Así cada
+   imagen del carrusel lleva al usuario directamente a la posición de ese
+   paquito en la página `/sabores`, con scroll-into-view automático del
+   anchor.
+
+Notas de implementación:
+
+- El `Link` dentro de `paquitoHint` debe respetar el comportamiento del
+  carrusel: el área activa de clic solo aplica al slide en `data-state="active"`
+  (los `prev/next` ya tienen `pointer-events: none` excepto en `active`).
+- Para que el scroll al anchor funcione bien con la barra fija (`header`),
+  considerar `scroll-margin-top` en cada bloque destino dentro de `/sabores`.

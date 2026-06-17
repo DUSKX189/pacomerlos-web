@@ -1,42 +1,20 @@
-const DIRECTUS_IMG_URL = process.env.NEXT_PUBLIC_DIRECTUS_IMG_URL;
-
-export interface Slide {
-  id: number;
-  sort: number | null;
-  is_featured: boolean;
-  title: string;
-  description: string | null;
-  button_function: string | null;
-  img_mobile: string;
-  img_tablet: string;
-  img_desktop: string;
-  title_color: string;
-  description_color: string;
-}
-
-function assetUrl(uuid: string, width: number, quality = 80) {
-  return `${DIRECTUS_IMG_URL}${uuid}?width=${width}&format=webp&quality=${quality}`;
-}
+import type { CarouselSlide } from '@/types/carousel';
+import { slideSources } from '@/lib/directus/carousel-images';
 
 interface CarouselSlideProps {
-  slide: Slide;
+  slide: CarouselSlide;
   priority?: boolean;
 }
 
 export default function CarouselSlide({ slide, priority = false }: CarouselSlideProps) {
+  const sources = slideSources(slide);
   return (
     <div className="relative h-full w-full overflow-hidden">
       <picture>
-        <source
-          media="(min-width: 1024px)"
-          srcSet={assetUrl(slide.img_desktop, 1920)}
-        />
-        <source
-          media="(min-width: 768px)"
-          srcSet={assetUrl(slide.img_tablet, 1280)}
-        />
+        <source media="(min-width: 1024px)" srcSet={sources.desktop} />
+        <source media="(min-width: 768px)" srcSet={sources.tablet} />
         <img
-          src={assetUrl(slide.img_mobile, 768)}
+          src={sources.mobile}
           alt=""
           loading={priority ? 'eager' : 'lazy'}
           fetchPriority={priority ? 'high' : 'auto'}
