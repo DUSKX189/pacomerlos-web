@@ -36,16 +36,46 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
 
   const pointerStartX = useRef<number | null>(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const indexRef = useRef(firstReal);
+  useEffect(() => {
+    indexRef.current = index;
+  }, [index]);
 
   const advance = useCallback(() => {
+    // Si el usuario insiste tras llegar al clon final antes de que el snap
+    // automático (700ms) se ejecute, hay que saltar nosotros mismos a la
+    // posición real y avanzar desde ahí. Sin esto, el índice se sale del
+    // rango de `displayed` y se ven slides en blanco.
+    if (loop && indexRef.current >= cloneEnd) {
+      setWithTransition(false);
+      setIndex(firstReal);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setWithTransition(true);
+          setIndex(firstReal + 1);
+        });
+      });
+      return;
+    }
     setWithTransition(true);
     setIndex(i => i + 1);
-  }, []);
+  }, [loop, cloneEnd, firstReal]);
 
   const retreat = useCallback(() => {
+    if (loop && indexRef.current <= cloneStart) {
+      setWithTransition(false);
+      setIndex(lastReal);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setWithTransition(true);
+          setIndex(lastReal - 1);
+        });
+      });
+      return;
+    }
     setWithTransition(true);
     setIndex(i => i - 1);
-  }, []);
+  }, [loop, cloneStart, lastReal]);
 
   useEffect(() => {
     if (!loop || isDragging) return;

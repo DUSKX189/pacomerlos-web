@@ -1,6 +1,3 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import Image from 'next/image';
 
 const BACKGROUNDS = [
@@ -10,12 +7,7 @@ const BACKGROUNDS = [
 ];
 
 export default function MainBanner() {
-  const [bg, setBg] = useState(BACKGROUNDS[0]);
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBg(BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)]);
-  }, []);
+  const bg = BACKGROUNDS[Math.floor(Math.random() * BACKGROUNDS.length)];
 
   return (
     <div className="relative h-full w-full overflow-hidden bg-paco-dark">

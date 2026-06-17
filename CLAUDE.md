@@ -63,3 +63,97 @@ El frontend Next.js es responsable de:
 
 - Variables de entorno: NEXT_PUBLIC_DIRECTUS_URL=<https://cms.pacomerlos.com>
 - Distinguir entorno dev (draft+published) vs prod (solo published) vía variable de entorno o parámetro de fetch.
+
+## Infraestructura de rendimiento y caché
+
+### Cloudflare como proxy frente a `cms.pacomerlos.com`
+
+Cloudflare está delante del VPS (proxy naranja activo). Aporta DDoS, SSL en edge,
+oculta la IP del origen y descarga tráfico de assets.
+
+#### Cache Rules configuradas (orden importa)
+
+1. **Bypass Directus API** (prioridad más alta — debe ir arriba):
+   - Match: `http.host eq "cms.pacomerlos.com"` AND `URI Path` starts_with cualquiera de:
+     `/items/`, `/graphql`, `/users`, `/auth`, `/server`, `/collections`, `/fields`, `/files`
+   - Acción: **Bypass cache**
+   - Motivo: garantiza que cualquier edición en Directus es inmediata.
+
+2. **Cache Directus assets**:
+   - Match: `http.host eq "cms.pacomerlos.com"` AND `URI Path` starts_with `/assets/`
+   - Acción: Eligible for cache, Edge TTL 1 mes, Browser TTL 1 día.
+   - Es seguro porque Directus asigna UUID inmutable a cada archivo: subir una
+     imagen nueva genera una URL nueva, sin colisión con la cacheada.
+
+### Headers Cache-Control en Apache (origen)
+
+En el vhost de `cms.pacomerlos.com` (`/etc/apache2/sites-available/cms.pacomerlos.com-le-ssl.conf`):
+
+```apache
+# Requiere mod_headers (sudo a2enmod headers)
+
+<LocationMatch "^/assets/">
+    Header unset Cache-Control
+    Header set Cache-Control "public, max-age=2592000, immutable"
+</LocationMatch>
+
+<LocationMatch "^/(items|graphql|users|auth|server|collections|fields|files)(/|$)">
+    Header unset Cache-Control
+    Header unset Pragma
+    Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+    Header set Pragma "no-cache"
+</LocationMatch>
+```
+
+Nota: usar `Header unset` + `Header set` **sin** `always` para que sobrescriba
+los headers que Directus envía por defecto (que viven en `headers_out`, no en
+`err_headers_out`).
+
+### Verificación rápida
+
+```bash
+# Asset: primera vez MISS, segunda HIT
+curl -I https://cms.pacomerlos.com/assets/<UUID-real>
+
+# API: siempre DYNAMIC o BYPASS (nunca HIT)
+curl -I https://cms.pacomerlos.com/items/carousel_slides
+```
+
+### Principio de frescura de datos
+
+- Cualquier edición en colecciones de Directus (`carousel_slides`, `paquitos_data`, etc.)
+  se sirve **sin caché de edge** → el cliente la ve en cuanto Next.js revalida (ISR).
+- Solo los binarios (`/assets/<uuid>`) se cachean en edge, y siempre con URL
+  inmutable por UUID.
+- Si en algún momento se reemplaza el binario de un asset existente manteniendo
+  el mismo UUID, hay que purgar manualmente desde Cloudflare o vía API.
+
+### ISR en Next.js
+
+- `revalidate: 30` segundos en `src/app/page.tsx` y en el `fetch` de slides.
+- Combinado con el bypass de Cloudflare: el cliente nunca espera más de 30s
+  para ver cambios de contenido en Directus.
+
+### Renderizado de imágenes en el frontend
+
+Estrategia de assets del carrusel (`CarouselSlide.tsx`):
+
+- `<picture>` con `<source media>` para mobile/tablet/desktop. El navegador
+  descarga **solo la variante** que coincide con el viewport actual y reevalúa
+  al cambiar de tamaño.
+- URLs generadas con transformaciones de Directus:
+  `<uuid>?width=<px>&format=webp&quality=80`. Anchos por breakpoint: 768 / 1280 / 1920.
+- Se usa `<img>` plano en vez de `next/image` (o `next/image` con `unoptimized`)
+  para que la petición vaya **directa a Cloudflare/Directus** en lugar de pasar
+  por `/_next/image`. Así la caché del edge sirve al cliente final sin saltos
+  intermedios por el servidor Next.js.
+- `fetchPriority="high"` + `loading="eager"` en la primera slide (LCP).
+  El resto, `loading="lazy"`.
+
+`MainBanner.tsx`: Server Component. La selección aleatoria del fondo se hace
+en el servidor durante el render. Esto evita el "flash" de hidratación
+(antes mostraba siempre `fondo-oreo.png` y luego saltaba al random). Con
+`revalidate: 30`, el fondo rota cada 30s; todos los usuarios que aciertan
+la misma ventana de revalidación ven el mismo fondo (aceptable; si en el
+futuro se quiere aleatoriedad por usuario habrá que volver a cliente o usar
+cookie con seed).

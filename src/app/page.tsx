@@ -1,6 +1,7 @@
 import CarouselSlide, { type Slide } from '@/components/layout/Hero/CarouselSlide';
 import HeroCarousel from '@/components/layout/Hero/HeroCarousel';
 import MainBanner from '@/components/layout/Hero/MainBanner';
+import Conector from '@/components/ui/LangingPage/conector';
 
 export const revalidate = 30;
 
@@ -80,18 +81,21 @@ export default async function Home() {
   const normal = slides.filter(s => !s.is_featured).sort(bySort);
 
   return (
-    <HeroCarousel>
-      {featured.map((slide, i) => (
-        <CarouselSlide key={slide.id} slide={slide} priority={i === 0} />
-      ))}
-      <MainBanner />
-      {normal.map((slide, i) => (
-        <CarouselSlide
-          key={slide.id}
-          slide={slide}
-          priority={featured.length === 0 && i === 0}
-        />
-      ))}
-    </HeroCarousel>
+    <>
+      <HeroCarousel>
+        {featured.map((slide, i) => (
+          <CarouselSlide key={slide.id} slide={slide} priority={i === 0} />
+        ))}
+        <MainBanner />
+        {normal.map((slide, i) => (
+          <CarouselSlide
+            key={slide.id}
+            slide={slide}
+            priority={featured.length === 0 && i === 0}
+          />
+        ))}
+      </HeroCarousel>
+      <Conector />
+    </>
   );
 }
