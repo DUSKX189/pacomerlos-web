@@ -20,6 +20,7 @@ const PAQUITO_FIELDS = [
   'id', 'name', 'tagline', 'image_main',
   'general_description', 'interior_description', 'topping_description',
   'primary_color', 'secondary_color',
+  'allergens', 'cross_contact',
 ].join(',');
 
 function toCarouselSlide(raw: CarouselSlideRaw): CarouselSlide {

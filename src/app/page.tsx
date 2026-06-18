@@ -1,10 +1,10 @@
-import CarouselSlide from '@/components/layout/Hero/CarouselSlide';
-import HeroCarousel from '@/components/layout/Hero/HeroCarousel';
-import MainBanner from '@/components/layout/Hero/MainBanner';
+import CarouselSlide from '@/components/layout/LandingPage/Hero/CarouselSlide';
+import HeroCarousel from '@/components/layout/LandingPage/Hero/HeroCarousel';
+import MainBanner from '@/components/layout/LandingPage/Hero/MainBanner';
 import Conector from '@/components/ui/LangingPage/conector';
 import { getCarouselSlides, getPaquitos } from '@/lib/directus/queries';
 import { buildCarouselOrder } from '@/utils/carousel-order';
-import PaquitosGalery from '@/components/ui/LangingPage/paquitosGalery';
+import PaquitosGalery from '@/components/layout/LandingPage/PaquitoGalery/paquitosGalery';
 
 export const revalidate = 30;
 

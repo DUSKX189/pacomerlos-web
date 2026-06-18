@@ -6,12 +6,13 @@
 
   --paco-orange: #fa572a;
   --paco-purple: #8C52FF;
+  --paco-purple-dark: #4c249c;
   --paco-cream:  #FFFFF5;
   --paco-dark:   #0F0F0F;
 
   --padding-mobile:  1rem;
-  --padding-tablet:  1.5rem;
-  --padding-desktop: 3rem;
+  --padding-tablet:  1rem;
+  --padding-desktop: 1rem;
 }
 
 @theme inline {
@@ -21,6 +22,7 @@
   --color-paco-purple: var(--paco-purple);
   --color-paco-cream:  var(--paco-cream);
   --color-paco-dark:   var(--paco-dark);
+  --color-paco-purple-dark: var(--paco-purple-dark);
 
   --font-now:    var(--font-now), system-ui, sans-serif;
   --font-chunko: var(--font-chunko), Impact, sans-serif;
@@ -71,10 +73,13 @@ body {
   }
 
   .navlink {
-    @apply rounded-md px-3.5 py-2 text-sm font-medium uppercase tracking-[0.12em] text-black/55 transition hover:bg-paco-purple/10 hover:text-paco-purple;
+    @apply rounded-md px-2 py-2 text-base font-medium uppercase tracking-[0.12em] text-black/55 transition hover:bg-paco-purple/10 hover:text-paco-purple;
   }
   .navlink-external {
     @apply text-paco-purple;
+  }
+  .navlink-active {
+    @apply bg-paco-purple/10 text-paco-purple;
   }
 
   /* ============================================= */
@@ -84,7 +89,7 @@ body {
     @apply relative h-7 w-7 cursor-pointer focus:outline-none md:hidden;
   }
   .burger-bar {
-    @apply absolute left-0 h-[3px] w-7 rounded bg-paco-orange transition-all duration-200 ease-in-out;
+    @apply absolute left-0 h-0.75 w-7 rounded bg-paco-orange transition-all duration-200 ease-in-out;
   }
 
   /* ============================================= */

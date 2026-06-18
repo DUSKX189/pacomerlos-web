@@ -3,8 +3,10 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
+import { isActiveLink } from '@/utils/nav';
 
 const NAV_LINKS = [
+  { name: 'Inicio',         href: '/',               external: false },
   { name: 'Sabores',        href: '/sabores',        external: false },
   { name: 'Sobre Nosotros', href: '/sobre-nosotros', external: false },
   { name: 'Pacommunity',    href: '/pacommunity',    external: false },
@@ -35,7 +37,7 @@ export default function DropdownNav({ isOpen, onClose }: DropdownNavProps) {
     >
       <ul className="mt-24 flex flex-col gap-2 px-6">
         {NAV_LINKS.map(({ name, href, external }) => {
-          const isActive = pathname === href;
+          const isActive = !external && isActiveLink(pathname, href);
           const colorClass = external
             ? 'text-paco-purple'
             : isActive
@@ -51,7 +53,8 @@ export default function DropdownNav({ isOpen, onClose }: DropdownNavProps) {
                 target={external ? '_blank' : undefined}
                 rel={external ? 'noopener noreferrer' : undefined}
                 onClick={onClose}
-                className={`block px-2 py-4 font-chunko text-3xl uppercase tracking-wide transition-colors ${colorClass}`}
+                aria-current={isActive ? 'page' : undefined}
+                className={`block px-2 py-4 font-now text-3xl uppercase tracking-wide transition-colors ${colorClass}`}
               >
                 {name}
               </Link>

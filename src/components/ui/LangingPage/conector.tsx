@@ -6,7 +6,7 @@ export default function Conector() {
           la onda actúa como transición entre carrusel y púrpura sin franja. */}
       {/* <CreamDrip className="bg-transparent top-0 h-16 md:h-24" /> */}
 
-      <div className="relative z-10 flex flex-col items-center justify-center gap-5 px-8 py-24 text-center md:py-32">
+      <div className="relative z-10 flex flex-col items-center justify-center gap-5 px-8 py-15 text-center md:py-32">
         <h1 className="text-3xl md:text-6xl font-now font-bold uppercase">
           Prepárate Pa&apos; Comerlos
         </h1>
