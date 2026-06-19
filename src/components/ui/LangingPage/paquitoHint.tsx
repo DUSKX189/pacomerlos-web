@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import Link from 'next/link';
 import type { Paquito } from '@/types/paquitos';
 import { assetUrl } from '@/lib/directus/assets';
 
@@ -8,17 +8,21 @@ interface PaquitoHintProps {
 
 export default function PaquitoHint({ paquito }: PaquitoHintProps) {
   return (
-    <div className="flex w-full items-center justify-center">
-      <Image
+    <Link
+      href={`/sabores#${paquito.slug}`}
+      aria-label={`Ver ${paquito.name} en la página de sabores`}
+      draggable={false}
+      className="flex w-full items-center justify-center"
+    >
+      {/* eslint-disable-next-line @next/next/no-img-element -- assets servidos directos por Cloudflare/Directus, sin pasar por /_next/image (ver CLAUDE.md) */}
+      <img
         src={assetUrl(paquito.image_main, { width: 600, format: 'webp', quality: 80 })}
         alt={paquito.name}
-        width={600}
-        height={600}
-        sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-        unoptimized
+        loading="lazy"
+        decoding="async"
         draggable={false}
         className="h-auto w-full object-contain select-none"
       />
-    </div>
+    </Link>
   );
 }

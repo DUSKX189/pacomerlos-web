@@ -3,6 +3,9 @@ import type { Paquito } from '@/types/paquitos';
 import { assetUrl } from '@/lib/directus/assets';
 import { normalizeAllergens } from '@/lib/allergens';
 
+const IMG_MOBILE = 500;
+const IMG_DESKTOP = 800;
+
 interface PacoCardProps {
   paquito: Paquito;
   /** Invierte el orden imagen/texto para el patrón zig-zag */
@@ -18,8 +21,8 @@ export default function PacoCard({ paquito, reverse = false }: PacoCardProps) {
 
   return (
     <article
-      id={`paquito-${paquito.id}`}
-      className={`scroll-mt-10 flex py-10 flex-col items-center gap-10 ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'
+      data-paquito-anchor={paquito.slug}
+      className={`scroll-mt-28 flex py-10 flex-col items-center gap-10 ${reverse ? 'md:flex-row-reverse' : 'md:flex-row'
         }`}
     >
       {/* Imagen */}
@@ -27,16 +30,20 @@ export default function PacoCard({ paquito, reverse = false }: PacoCardProps) {
         className="w-full md:w-1/2 md:self-stretch flex items-center justify-center rounded-2xl"
         style={{ backgroundColor: secondary }}
       >
-        <Image
-          src={assetUrl(paquito.image_main, { width: 800, format: 'webp', quality: 80 })}
-          alt={paquito.name}
-          width={800}
-          height={400}
-          sizes="(min-width: 768px) 50vw, 100vw"
-          unoptimized
-          draggable={false}
-          className="h-auto w-full object-contain select-none md:h-full md:w-auto"
-        />
+        <picture>
+          <source
+            media="(min-width: 768px)"
+            srcSet={assetUrl(paquito.image_main, { width: IMG_DESKTOP, format: 'webp', quality: 80 })}
+          />
+          <img
+            src={assetUrl(paquito.image_main, { width: IMG_MOBILE, format: 'webp', quality: 80 })}
+            alt={paquito.name}
+            loading="lazy"
+            decoding="async"
+            draggable={false}
+            className="h-auto w-full object-contain select-none md:h-full md:w-auto"
+          />
+        </picture>
       </div>
 
       {/* Texto */}

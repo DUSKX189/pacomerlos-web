@@ -1,5 +1,8 @@
 import BackButton from "@/components/ui/SaboresPage/backButton"
+import DeepLinkScroller from "@/components/ui/SaboresPage/deepLinkScroller"
 import PacoCard from "@/components/ui/SaboresPage/pacoCard"
+import PacoCardMobile from "@/components/ui/SaboresPage/pacoCardMobile"
+import StackedCards from "@/components/ui/SaboresPage/stackedCards"
 import { getPaquitos } from "@/lib/directus/queries"
 
 export const revalidate = 30;
@@ -9,6 +12,8 @@ export default async function Sabores() {
 
   return (
     <>
+      <DeepLinkScroller />
+
       <section className="padding-responsive pt-22 md:pt-25 pb-10">
         <BackButton />
         <h1 className="mt-5 md:text-center font-chunko uppercase text-paco-orange text-4xl md:text-7xl lg:text-8xl">
@@ -19,10 +24,20 @@ export default async function Sabores() {
         </h2>
       </section>
 
-      <section className="padding-responsive gap-10 flex flex-col pb-24">
+      {/* Móvil: cards compactas y desplegables */}
+      <section className="md:hidden padding-responsive pb-24 flex flex-col gap-4">
         {paquitos.map((paquito, i) => (
-          <PacoCard key={paquito.id} paquito={paquito} reverse={i % 2 === 1} />
+          <PacoCardMobile key={paquito.id} paquito={paquito} reverse={i % 2 === 1} />
         ))}
+      </section>
+
+      {/* Desktop: pila de cards al hacer scroll */}
+      <section className="hidden md:block padding-responsive pb-24">
+        <StackedCards topOffset={40} gap={24}>
+          {paquitos.map((paquito, i) => (
+            <PacoCard key={paquito.id} paquito={paquito} reverse={i % 2 === 1} />
+          ))}
+        </StackedCards>
       </section>
     </>
   )

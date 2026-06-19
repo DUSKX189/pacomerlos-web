@@ -145,7 +145,7 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
 
   return (
     <section
-      className="relative h-[80vh] w-full overflow-hidden touch-pan-y select-none"
+      className="relative h-[90vh] w-full overflow-hidden touch-pan-y select-none"
       aria-roledescription="carrusel"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
@@ -153,11 +153,10 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
       onPointerCancel={onPointerEnd}
     >
       <div
-        className={`flex h-full w-full ${
-          isDragging || !withTransition
+        className={`flex h-full w-full ${isDragging || !withTransition
             ? ''
             : 'transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)]'
-        }`}
+          }`}
         style={{ transform }}
       >
         {displayed.map((slide, i) => {

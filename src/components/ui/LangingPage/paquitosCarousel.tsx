@@ -35,12 +35,13 @@ export default function PaquitosCarousel({ paquitos }: PaquitosCarouselProps) {
   const loop = count > 1;
 
   const [current, setCurrent] = useState(0);
-  const [isDragging, setIsDragging] = useState(false);
-  const pointerStartX = useRef<number | null>(null);
   const dragWidthRef = useRef(0);
   const dragDeltaRef = useRef(0);
   const pausedRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Tras un arrastre, suprime el click del <Link> de la slide activa para no
+  // navegar al hacer swipe.
+  const suppressClickRef = useRef(false);
 
   const advance = useCallback(() => {
     if (count === 0) return;
@@ -67,31 +68,35 @@ export default function PaquitosCarousel({ paquitos }: PaquitosCarouselProps) {
     };
   }, [startAutoplay]);
 
+  // Arrastre sin setPointerCapture: la captura de puntero redirige el evento
+  // `click` al stage (comportamiento de Chromium), lo que impedía navegar con el
+  // <Link> de la slide. En su lugar seguimos el gesto con listeners en window.
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     if (!loop) return;
-    pointerStartX.current = e.clientX;
+    const startX = e.clientX;
     dragWidthRef.current = e.currentTarget.offsetWidth || 1;
     dragDeltaRef.current = 0;
-    setIsDragging(true);
     pausedRef.current = true;
-    e.currentTarget.setPointerCapture(e.pointerId);
-  };
 
-  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
-    if (!isDragging || pointerStartX.current === null) return;
-    dragDeltaRef.current = e.clientX - pointerStartX.current;
-  };
+    const onMove = (ev: PointerEvent) => {
+      dragDeltaRef.current = ev.clientX - startX;
+    };
+    const onUp = () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+      suppressClickRef.current = Math.abs(dragDeltaRef.current) > 8;
+      const ratio = dragDeltaRef.current / (dragWidthRef.current || 1);
+      if (ratio < -DRAG_THRESHOLD) advance();
+      else if (ratio > DRAG_THRESHOLD) retreat();
+      dragDeltaRef.current = 0;
+      pausedRef.current = false;
+      startAutoplay();
+    };
 
-  const onPointerEnd = () => {
-    if (!isDragging) return;
-    const ratio = dragDeltaRef.current / (dragWidthRef.current || 1);
-    if (ratio < -DRAG_THRESHOLD) advance();
-    else if (ratio > DRAG_THRESHOLD) retreat();
-    pointerStartX.current = null;
-    dragDeltaRef.current = 0;
-    setIsDragging(false);
-    pausedRef.current = false;
-    startAutoplay();
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
   };
 
   if (count === 0) return null;
@@ -104,9 +109,12 @@ export default function PaquitosCarousel({ paquitos }: PaquitosCarouselProps) {
         className="paquito-stage"
         aria-roledescription="carrusel"
         onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerEnd}
-        onPointerCancel={onPointerEnd}
+        onClickCapture={(e) => {
+          if (suppressClickRef.current) {
+            e.preventDefault();
+            suppressClickRef.current = false;
+          }
+        }}
         onMouseEnter={() => { pausedRef.current = true; }}
         onMouseLeave={() => { pausedRef.current = false; }}
       >

@@ -2,6 +2,10 @@ import type { CarouselSlide, CarouselSlideRaw } from '@/types/carousel';
 import type { Paquito } from '@/types/paquitos';
 import { directusFetch } from './client';
 import { contentEnv, statusFilter } from './status';
+import { slugify } from '@/lib/slug';
+
+/** Forma cruda que devuelve la API (sin el `slug`, que se calcula en frontend). */
+type PaquitoRaw = Omit<Paquito, 'slug'>;
 
 const COLOR_FALLBACK = '#0F0F0F';
 
@@ -55,10 +59,10 @@ export async function getCarouselSlides(): Promise<CarouselSlide[]> {
 
 export async function getPaquitos(): Promise<Paquito[]> {
   try {
-    const { data } = await directusFetch<Paquito[]>('/items/paquitos_data', {
+    const { data } = await directusFetch<PaquitoRaw[]>('/items/paquitos_data', {
       params: { fields: PAQUITO_FIELDS },
     });
-    return data;
+    return data.map((p) => ({ ...p, slug: slugify(p.name) }));
   } catch (err) {
     console.error('[getPaquitos]', err);
     return [];

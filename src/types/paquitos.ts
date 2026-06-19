@@ -13,6 +13,8 @@ export type AllergenSlug =
 export interface Paquito {
   id: number;
   name: string;
+  /** Slug derivado de `name` (normalizado en el frontend). Sirve de ancla en /sabores */
+  slug: string;
   tagline: string | null;
   image_main: string;
   general_description: string | null;
