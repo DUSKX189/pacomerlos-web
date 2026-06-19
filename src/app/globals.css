@@ -1,14 +1,187 @@
 @import "tailwindcss";
 
 :root {
-  --background: #FFFFE6;
-  --foreground: #000000;
-  /* Colores corporativos */
-  --color-primary: #8459F6;
-  --color-secondary: #EA6F48;
+  --background: #FFFFF5;
+  --foreground: #0F0F0F;
+
+  --paco-orange: #fa572a;
+  --paco-purple: #8C52FF;
+  --paco-purple-dark: #4c249c;
+  --paco-cream:  #FFFFF5;
+  --paco-dark:   #0F0F0F;
+
+  --padding-mobile:  1rem;
+  --padding-tablet:  1rem;
+  --padding-desktop: 1rem;
+}
+
+@theme inline {
+  --color-background:  var(--background);
+  --color-foreground:  var(--foreground);
+  --color-paco-orange: var(--paco-orange);
+  --color-paco-purple: var(--paco-purple);
+  --color-paco-cream:  var(--paco-cream);
+  --color-paco-dark:   var(--paco-dark);
+  --color-paco-purple-dark: var(--paco-purple-dark);
+
+  --font-now:    var(--font-now), system-ui, sans-serif;
+  --font-chunko: var(--font-chunko), Impact, sans-serif;
 }
 
 body {
   background-color: var(--background);
   color: var(--foreground);
+  font-family: var(--font-now);
+}
+
+@layer components {
+
+  /* ===== Responsive padding ===== */
+  .padding-responsive {
+    @apply mx-auto;
+    max-width: 80rem;
+    padding-left:  var(--padding-mobile);
+    padding-right: var(--padding-mobile);
+  }
+  @media (min-width: 768px) {
+    .padding-responsive {
+      padding-left:  var(--padding-tablet);
+      padding-right: var(--padding-tablet);
+    }
+  }
+  @media (min-width: 1024px) {
+    .padding-responsive {
+      padding-left:  var(--padding-desktop);
+      padding-right: var(--padding-desktop);
+    }
+  }
+
+  /* ============================================= */
+  /* =================== HEADER ================== */
+  /* ============================================= */
+  .header {
+    @apply fixed inset-x-0 top-0 z-50 px-4 py-3 transition-transform duration-300 ease-in-out md:px-6;
+  }
+  .header-pill {
+    @apply mx-auto flex max-w-5xl items-center justify-between rounded-2xl border border-black/5 bg-paco-cream px-4 py-3 shadow-[0_0.5rem_2rem_rgba(0,0,0,0.12)] md:px-5;
+  }
+  .header-logo {
+    @apply flex shrink-0 items-center transition-opacity hover:opacity-80;
+  }
+  .header-logo img {
+    @apply h-9 w-auto md:h-10;
+  }
+
+  .navlink {
+    @apply rounded-md px-2 py-2 text-base font-medium uppercase tracking-[0.12em] text-black/55 transition hover:bg-paco-purple/10 hover:text-paco-purple;
+  }
+  .navlink-external {
+    @apply text-paco-purple;
+  }
+  .navlink-active {
+    @apply bg-paco-purple/10 text-paco-purple;
+  }
+
+  /* ============================================= */
+  /* ================= BURGER ==================== */
+  /* ============================================= */
+  .burger {
+    @apply relative h-7 w-7 cursor-pointer focus:outline-none md:hidden;
+  }
+  .burger-bar {
+    @apply absolute left-0 h-0.75 w-7 rounded bg-paco-orange transition-all duration-200 ease-in-out;
+  }
+
+  /* ============================================= */
+  /* =================== HERO ==================== */
+  /* ============================================= */
+  .hero-dot {
+    @apply h-2.5 w-2.5 cursor-pointer rounded-full bg-white/50 shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300 hover:bg-white/80;
+  }
+  .hero-dot-active {
+    @apply w-6 bg-white;
+  }
+  /* ============================================= */
+  /* =================== GALERY ================== */
+  /* ============================================= */
+  .side-bars{
+    @apply h-px w-10 bg-paco-orange
+  }
+
+  .paquito-stage {
+    position: relative;
+    width: 100%;
+    height: clamp(180px, 28vw, 400px);
+    overflow: hidden;
+    margin-top: 3rem;
+    touch-action: pan-y;
+    user-select: none;
+  }
+  .paquito-slide {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: clamp(300px, 62vw, 920px);
+    transform: translate(-50%, -50%) scale(0.85);
+    transition:
+      transform 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      filter    0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+      opacity   0.5s ease;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    filter: blur(8px);
+    will-change: transform, filter, opacity;
+  }
+  .paquito-slide[data-state="active"] {
+    transform: translate(-50%, -50%) scale(1);
+    filter: none;
+    z-index: 3;
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .paquito-slide[data-state="prev"] {
+    transform: translate(calc(-50% - 44vw), -50%) scale(0.73);
+    filter: blur(6px);
+    z-index: 2;
+    opacity: 0.85;
+  }
+  .paquito-slide[data-state="next"] {
+    transform: translate(calc(-50% + 44vw), -50%) scale(0.73);
+    filter: blur(6px);
+    z-index: 2;
+    opacity: 0.85;
+  }
+  .paquito-slide[data-state="far-next"] {
+    transform: translate(calc(-50% + 72vw), -50%) scale(0.45);
+    filter: blur(14px);
+    opacity: 0;
+    z-index: 1;
+  }
+  .paquito-slide[data-state="far-prev"] {
+    transform: translate(calc(-50% - 72vw), -50%) scale(0.45);
+    filter: blur(14px);
+    opacity: 0;
+    z-index: 1;
+  }
+  .paquito-slide[data-state="hidden"] {
+    opacity: 0;
+    z-index: 0;
+  }
+  @media (max-width: 767px) {
+    .paquito-stage { height: clamp(140px, 50vw, 280px); }
+    .paquito-slide { width: 78vw; }
+    .paquito-slide[data-state="prev"] {
+      transform: translate(calc(-50% - 56vw), -50%) scale(0.62);
+    }
+    .paquito-slide[data-state="next"] {
+      transform: translate(calc(-50% + 56vw), -50%) scale(0.62);
+    }
+    .paquito-slide[data-state="far-next"] {
+      transform: translate(calc(-50% + 88vw), -50%) scale(0.4);
+    }
+    .paquito-slide[data-state="far-prev"] {
+      transform: translate(calc(-50% - 88vw), -50%) scale(0.4);
+    }
+  }
 }
