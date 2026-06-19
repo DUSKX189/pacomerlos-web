@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Footer from "@/components/layout/Footer/Footer";
 import Header from "@/components/layout/Header/Header";
@@ -28,8 +28,26 @@ const chunko = localFont({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  themeColor: "#8C52FF",
+};
+
 export const metadata: Metadata = {
-  title: "Paco Merlos",
+  metadataBase: new URL("https://pacomerlos.com"),
+  title: {
+    default: "Paco Merlos",
+    template: "%s — Paco Merlos",
+  },
+  authors: [{ name: "Paco Merlos" }],
+  robots: "index, follow, max-image-preview:large, max-snippet:-1",
+  openGraph: {
+    locale: "es_ES",
+    siteName: "Paco Merlos",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
 };
 
 export default function RootLayout({

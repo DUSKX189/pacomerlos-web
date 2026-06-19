@@ -4,7 +4,7 @@ import Link from 'next/link';
 import BackButton from '@/components/ui/SaboresPage/backButton';
 
 export const metadata: Metadata = {
-  title: 'Política de cookies | Paco Merlos',
+  title: 'Política de cookies',
   description:
     'Información sobre el uso de cookies y tecnologías de almacenamiento en el sitio web de Paco Merlos.',
 };

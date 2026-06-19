@@ -4,7 +4,7 @@ import Link from 'next/link';
 import BackButton from '@/components/ui/SaboresPage/backButton';
 
 export const metadata: Metadata = {
-  title: 'Aviso legal | Paco Merlos',
+  title: 'Aviso legal',
   description: 'Aviso legal y condiciones de uso del sitio web de Paco Merlos.',
 };
 

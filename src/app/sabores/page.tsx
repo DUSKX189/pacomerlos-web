@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import BackButton from "@/components/ui/SaboresPage/backButton"
 import DeepLinkScroller from "@/components/ui/SaboresPage/deepLinkScroller"
 import PacoCard from "@/components/ui/SaboresPage/pacoCard"
@@ -5,6 +6,20 @@ import PacoCard from "@/components/ui/SaboresPage/pacoCard"
 import MobileCatalog from "@/components/ui/SaboresPage/MobileCatalog"
 import StackedCards from "@/components/ui/SaboresPage/stackedCards"
 import { getPaquitos } from "@/lib/directus/queries"
+
+export const metadata: Metadata = {
+  title: "Nuestros Sabores",
+  description: "Descubre todos los sabores de paquitos artesanales de Paco Merlos, hechos a mano con masa madre fermentada 48 horas.",
+  alternates: {
+    canonical: "https://pacomerlos.com/sabores",
+  },
+  openGraph: {
+    url: "https://pacomerlos.com/sabores",
+    title: "Nuestros Sabores — Paco Merlos",
+    description: "Descubre todos los sabores de paquitos artesanales de Paco Merlos, hechos a mano con masa madre fermentada 48 horas.",
+    images: [{ url: "/img/PACOSJUNTOS.png" }],
+  },
+};
 
 export const revalidate = 30;
 

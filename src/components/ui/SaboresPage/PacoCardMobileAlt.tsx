@@ -108,7 +108,7 @@ export default function PacoCardMobileAlt({
 
         <h2
           ref={nameRef}
-          className="font-now font-bold text-2xl uppercase leading-none text-start"
+          className={`font-now font-bold uppercase leading-none text-start ${open ? 'text-4xl' : 'text-2xl'}`}
           style={{ color: accent }}
         >
           {paquito.name}
@@ -143,7 +143,7 @@ export default function PacoCardMobileAlt({
         <div className="overflow-hidden">
           <div className="px-3 pb-6 text-start">
             {paquito.tagline && (
-              <p className="text-lg" style={{ color: accent }}>
+              <p className="text-xl font-semibold text-center" style={{ color: accent }}>
                 {paquito.tagline}
               </p>
             )}

@@ -4,7 +4,7 @@ import Link from 'next/link';
 import BackButton from '@/components/ui/SaboresPage/backButton';
 
 export const metadata: Metadata = {
-  title: 'Política de privacidad | Paco Merlos',
+  title: 'Política de privacidad',
   description:
     'Información sobre el tratamiento de datos personales en el sitio web de Paco Merlos.',
 };

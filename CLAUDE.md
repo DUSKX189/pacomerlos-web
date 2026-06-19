@@ -185,44 +185,23 @@ Pasos previstos cuando se acometa:
    - `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
    - `NEXT_PUBLIC_CONTENT_ENV=production` (solo published)
 
+## ToDo
+
+- [ ] **Paquito destacado / edición limitada**: diferenciar visualmente un paquito nuevo o por tiempo limitado del resto del catálogo.
+  - **Directus**: añadir campos a `paquitos_data`: `is_new` (bool) y/o `is_limited` (bool) + opcionalmente `badge_label` (string, ej. "Nuevo", "Edición limitada").
+  - **Frontend**: variante visual en `PacoCard.tsx` (desktop) y `PacoCardMobileAlt.tsx` (mobile) — puede ser un badge/ribbon, borde especial, animación sutil, etc.
+  - **Tipos**: actualizar `src/types/paquitos.ts` con los nuevos campos.
+  - **Query**: actualizar `getPaquitos()` en `src/lib/directus/queries.ts` para incluir los nuevos campos en el `fields[]`.
+- [ ] **Rediseñar Footer** (`src/components/layout/Footer/`): nuevo diseño e incluir enlaces a las páginas legales existentes (`/aviso-legal`, `/privacidad`, `/politica-de-cookies`).
+- [ ] **Diseñar imagen OG** (`public/img/PACOSJUNTOS.png`): imagen de 1200×630 px para la previsualización al compartir enlaces en redes sociales. Referenciada en `og:image` de `page.tsx` y `sabores/page.tsx`. Debe verse bien en proporción 1.91:1; evitar texto importante en los bordes.
+
 ## Próximos pasos
 
-### Página `/sabores`
+### CTA general hacia `/sabores` desde la home
 
-Diseñar y construir una nueva ruta `/sabores` (App Router: `src/app/sabores/page.tsx`)
-que sirva como vitrina completa del catálogo de paquitos.
+En `src/components/layout/LandingPage/PaquitoGalery/paquitosGalery.tsx` — añadir
+un `Link` (`next/link`) hacia `/sabores` como CTA general de la sección
+(ubicación a decidir: bajo el carrusel o como botón al lado del título "Conoce cada uno").
 
-Requisitos funcionales:
-
-- Obtiene **todos** los paquitos desde `paquitos_data` vía `getPaquitos()`
-  (ya disponible en `src/lib/directus/queries.ts`).
-- Lista cada paquito mostrando su `image_main` y toda la información asociada:
-  `name`, `tagline`, `general_description`, `interior_description`,
-  `topping_description`. `primary_color` y `secondary_color` se usan para
-  acentos visuales (títulos, fondos, separadores, etc.).
-- Server Component con ISR (`revalidate: 30`) — mismo patrón que `src/app/page.tsx`.
-- Cada paquito debe tener un **anchor estable** que permita el deep-linking
-  desde el carrusel de la home: por ejemplo, envolver cada bloque con
-  `id={`paquito-${paquito.id}`}` o un slug derivado del `name`.
-
-### Enlaces desde la home
-
-Dos puntos a actualizar en `src/components/ui/LangingPage/`:
-
-1. **`paquitosGalery.tsx`** — añadir un `Link` (`next/link`) hacia `/sabores`
-   como CTA general de la sección (ubicación a decidir: bajo el carrusel o
-   como botón al lado del título "Conoce cada uno").
-
-2. **`paquitoHint.tsx`** — envolver el contenido del hint con un `Link` que
-   apunte a `/sabores#paquito-<id>` (o el slug que se elija). Así cada
-   imagen del carrusel lleva al usuario directamente a la posición de ese
-   paquito en la página `/sabores`, con scroll-into-view automático del
-   anchor.
-
-Notas de implementación:
-
-- El `Link` dentro de `paquitoHint` debe respetar el comportamiento del
-  carrusel: el área activa de clic solo aplica al slide en `data-state="active"`
-  (los `prev/next` ya tienen `pointer-events: none` excepto en `active`).
-- Para que el scroll al anchor funcione bien con la barra fija (`header`),
-  considerar `scroll-margin-top` en cada bloque destino dentro de `/sabores`.
+Nota: considerar `scroll-margin-top` en los bloques destino de `/sabores` si el
+scroll al anchor no compensa la altura de la barra fija (`header`).

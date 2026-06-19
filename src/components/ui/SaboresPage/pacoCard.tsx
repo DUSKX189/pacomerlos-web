@@ -51,14 +51,14 @@ export default function PacoCard({ paquito, reverse = false }: PacoCardProps) {
       {/* Texto */}
       <div className="w-full md:w-1/2">
         <h2
-          className="font-chunko uppercase text-4xl md:text-5xl lg:text-6xl"
+          className="font-chunko uppercase md:text-5xl lg:text-6xl"
           style={{ color: accent }}
         >
           {paquito.name}
         </h2>
 
         {paquito.tagline && (
-          <p className="mt-2 text-lg md:text-xl" style={{ color: accent }}>
+          <p className="mt-2 md:text-2xl uppercase tracking-wide" style={{ color: accent }}>
             {paquito.tagline}
           </p>
         )}
@@ -73,7 +73,7 @@ export default function PacoCard({ paquito, reverse = false }: PacoCardProps) {
 
         {paquito.interior_description && (
           <div className="mt-5">
-            <h3 className="font-chunko uppercase text-lg md:text-xl" style={{ color: accent }}>
+            <h3 className="font-now font-bold uppercase md:text-2xl" style={{ color: accent }}>
               El interior
             </h3>
             <p className="text-base md:text-lg leading-relaxed">
@@ -84,7 +84,7 @@ export default function PacoCard({ paquito, reverse = false }: PacoCardProps) {
 
         {paquito.topping_description && (
           <div className="mt-5">
-            <h3 className="font-chunko uppercase text-lg md:text-xl" style={{ color: accent }}>
+            <h3 className="font-now font-bold uppercase md:text-2xl" style={{ color: accent }}>
               El topping
             </h3>
             <p className="text-base md:text-lg leading-relaxed">
