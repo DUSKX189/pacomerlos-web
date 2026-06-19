@@ -159,6 +159,32 @@ la misma ventana de revalidación ven el mismo fondo (aceptable; si en el
 futuro se quiere aleatoriedad por usuario habrá que volver a cliente o usar
 cookie con seed).
 
+## Despliegue
+
+### Previsualización (Vercel)
+
+- El proyecto está conectado a Vercel **solo para preview**. Producción va en el VPS.
+- Cada push genera una URL de preview única.
+- Variables de entorno configuradas en Vercel solo para entornos Preview/Development:
+  - `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
+  - `NEXT_PUBLIC_CONTENT_ENV=development` (muestra drafts + published)
+- `vercel.json` tiene `autoAlias: false` para que Vercel no promocione `main` como producción.
+
+### Producción (VPS) — pendiente dockerizar
+
+El frontend Next.js debe dockerizarse para correr en el VPS junto a Directus y MariaDB.
+Pasos previstos cuando se acometa:
+
+1. Añadir `output: 'standalone'` en `next.config.ts` para imagen mínima.
+2. Crear `Dockerfile` multistage (builder + runner sobre Node Alpine).
+3. Integrar el servicio `nextjs` en el `docker-compose.yml` existente del VPS,
+   en la misma red interna que Directus.
+4. Configurar Apache como reverse proxy hacia el contenedor Next.js (puerto 3000),
+   con SSL vía Certbot, igual que `cms.pacomerlos.com`.
+5. Variables de entorno de producción:
+   - `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
+   - `NEXT_PUBLIC_CONTENT_ENV=production` (solo published)
+
 ## Próximos pasos
 
 ### Página `/sabores`
