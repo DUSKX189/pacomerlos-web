@@ -185,14 +185,103 @@ Pasos previstos cuando se acometa:
    - `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
    - `NEXT_PUBLIC_CONTENT_ENV=production` (solo published)
 
+## Newsletter de lanzamiento (Listmonk) — IMPLEMENTADO
+
+Captura de emails para avisar del lanzamiento global del producto. El flujo
+mínimo ya funciona: las altas llegan a Listmonk y, al poner la web en `launched`,
+un Directus Flow arranca la campaña y se envían los correos (verificado: los
+correos de prueba llegaron en el momento de cambiar el status a `launched`).
+
+### Arquitectura del flujo
+
+```
+Usuario → ① POST /api/notify { email, website(honeypot) }
+       → Next.js Route Handler (valida email + honeypot + rate-limit por IP)
+       → Listmonk Admin API (alta en lista de lanzamiento, creds server-only)
+
+Admin → ② pone launch_status = "launched" en Directus (singleton site_settings)
+      → Directus Flow (trigger update, condición launch_status == launched)
+      → PUT /api/campaigns/{id}/status {status:"running"} en Listmonk
+      → Listmonk envía la campaña a la lista
+```
+
+Estado actual del singleton (verificado vía API):
+`site_settings` = `{ launch_status: "launched", campaign_sent: true }`.
+
+### Funciones / archivos implementados (Next.js)
+
+- `src/lib/listmonk/client.ts` — `subscribeToLaunchList(email)`: helper
+  server-side de la Admin API de Listmonk. Auth `Authorization: token <user>:<token>`.
+  `POST /api/subscribers` con `status:"enabled"`, `lists:[LIST_ID]` y
+  `preconfirm_subscriptions:true` (necesario para single opt-in). Trata el 409 /
+  "already exists" como éxito (`alreadySubscribed:true`). Lanza si faltan las
+  variables `LISTMONK_*`.
+- `src/app/api/notify/route.ts` — Route Handler `POST` (`runtime:'nodejs'`,
+  `dynamic:'force-dynamic'`). Rate-limit en memoria (5 peticiones/60s por IP vía
+  `x-forwarded-for`), honeypot (campo `website`: si trae valor responde `ok`
+  silencioso sin dar pistas), validación de email (regex + máx 254 chars,
+  normaliza a minúsculas), delega en `subscribeToLaunchList`. Devuelve
+  `{ ok, alreadySubscribed }` o error con código adecuado.
+- `src/components/layout/Footer/NotifyForm.tsx` — client component con input
+  email + honeypot oculto + estados `idle|loading|success|error`. Mensajes
+  distintos para alta nueva vs. ya suscrito. Estilos `paco-purple`/`paco-cream`.
+- `src/components/layout/Footer/Footer.tsx` — renderiza `<NotifyForm />`.
+
+### Variables de entorno (server-only, sin `NEXT_PUBLIC_`)
+
+`LISTMONK_API_URL`, `LISTMONK_API_USER`, `LISTMONK_API_TOKEN`, `LISTMONK_LIST_ID`.
+En prod (VPS) `LISTMONK_API_URL` puede ser interno (`http://listmonk:9000`); en
+preview, la URL pública. (`LISTMONK_CAMPAIGN_ID` lo usa el Directus Flow, no el repo.)
+
+### Pendiente dentro de este flujo (ver ToDo)
+
+- **RGPD**: el formulario aún **no** incluye el checkbox de consentimiento
+  obligatorio ni el enlace a `/privacidad`; falta también actualizar `/privacidad`
+  con el tratamiento de datos del newsletter.
+- **Render condicional por `launch_status`**: no existe `getLaunchSettings()` ni
+  `src/types/launch.ts`; el frontend todavía no muestra/oculta secciones según el
+  estado. El formulario se muestra siempre en el Footer.
+- **Plantillas de email de Listmonk**: falta diseñar el email de confirmación de
+  alta y el de notificación de lanzamiento.
+
+### Infra VPS (configurada aparte; no se aplica desde este repo)
+
+- Servicios `listmonk` + `listmonk_db` (Postgres) en el `docker-compose` del VPS,
+  red interna de Directus. vhost Apache `lists.pacomerlos.com` (Certbot) → proxy a
+  `listmonk:9000` (proteger `/admin`). Cloudflare: subdominio `lists` con bypass.
+- Remitente `From: Paco Merlos <newsletter@pacomerlos.com>`, `Reply-To: info@pacomerlos.com`.
+- Listmonk: lista "Lanzamiento Paco Merlos" (single opt-in), SMTP `newsletter@`,
+  campaña de lanzamiento. Entregabilidad: SPF, DKIM y DMARC para `pacomerlos.com`.
+- Directus: singleton `site_settings` con `launch_status` (enum) + `campaign_sent`
+  (bool). Lectura pública. Flow: trigger update + condición `launch_status==launched`
+  → Request a Listmonk para arrancar la campaña.
+
 ## ToDo
 
+- [ ] **Rediseñar Footer + formulario de newsletter** (`src/components/layout/Footer/`):
+  modificar y diseñar un nuevo Footer que integre de forma cuidada el formulario de
+  email (`NotifyForm.tsx`). Incluir enlaces a las páginas legales existentes
+  (`/aviso-legal`, `/privacidad`, `/politica-de-cookies`) y el checkbox de
+  consentimiento RGPD (obligatorio, con enlace a `/privacidad`) que ahora falta en `NotifyForm`.
+- [ ] **Componentes condicionados por `launch_status`**: construir componentes que se
+  muestren u oculten según el estado de la página (`coming_soon` | `launched`).
+  - `src/types/launch.ts` — `LaunchStatus`, `LaunchSettings`.
+  - `src/lib/directus/queries.ts` — `getLaunchSettings()` (lee el singleton
+    `site_settings`, mismo patrón que `getCarouselSlides`, ISR 30s).
+  - `src/app/page.tsx` (y donde aplique) — render condicional: en `coming_soon`
+    mostrar "Avísame"; en `launched` el contenido normal (decidir si además banner
+    "¡Ya disponible!").
+- [ ] **Email de confirmación de alta en la newsletter**: diseñar y crear la plantilla
+  (Listmonk) que se envía al darse de alta, confirmando la suscripción. Remitente
+  `newsletter@`, enlace de baja nativo de Listmonk.
+- [ ] **Email de notificación de lanzamiento**: diseñar y crear la plantilla/campaña
+  (Listmonk) que se envía a la lista cuando el producto pasa a `launched` ("¡Ya
+  disponible!"). Es la campaña que arranca el Directus Flow.
 - [ ] **Paquito destacado / edición limitada**: diferenciar visualmente un paquito nuevo o por tiempo limitado del resto del catálogo.
   - **Directus**: añadir campos a `paquitos_data`: `is_new` (bool) y/o `is_limited` (bool) + opcionalmente `badge_label` (string, ej. "Nuevo", "Edición limitada").
   - **Frontend**: variante visual en `PacoCard.tsx` (desktop) y `PacoCardMobileAlt.tsx` (mobile) — puede ser un badge/ribbon, borde especial, animación sutil, etc.
   - **Tipos**: actualizar `src/types/paquitos.ts` con los nuevos campos.
   - **Query**: actualizar `getPaquitos()` en `src/lib/directus/queries.ts` para incluir los nuevos campos en el `fields[]`.
-- [ ] **Rediseñar Footer** (`src/components/layout/Footer/`): nuevo diseño e incluir enlaces a las páginas legales existentes (`/aviso-legal`, `/privacidad`, `/politica-de-cookies`).
 - [ ] **Diseñar imagen OG** (`public/img/PACOSJUNTOS.png`): imagen de 1200×630 px para la previsualización al compartir enlaces en redes sociales. Referenciada en `og:image` de `page.tsx` y `sabores/page.tsx`. Debe verse bien en proporción 1.91:1; evitar texto importante en los bordes.
 
 ## Próximos pasos
