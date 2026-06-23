@@ -1,6 +1,6 @@
 export default function Conector() {
   return (
-    <div className="relative bg-paco-purple text-paco-cream">
+    <div className="relative z-10 bg-paco-purple text-paco-cream">
       {/* Conector se sobrepone al carrusel (-mt + z-20). El CreamDrip queda
           en el límite superior del conector, dentro de la zona de solape, así
           la onda actúa como transición entre carrusel y púrpura sin franja. */}

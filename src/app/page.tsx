@@ -28,22 +28,24 @@ export default async function Home() {
   const { featured, normal } = buildCarouselOrder(slides);
 
   return (
-    <>
-      <HeroCarousel>
-        {featured.map((slide, i) => (
-          <CarouselSlide key={slide.id} slide={slide} priority={i === 0} />
-        ))}
-        <MainBanner />
-        {normal.map((slide, i) => (
-          <CarouselSlide
-            key={slide.id}
-            slide={slide}
-            priority={featured.length === 0 && i === 0}
-          />
-        ))}
-      </HeroCarousel>
+    <div className="relative">
+      <div className="sticky top-0 overflow-hidden">
+        <HeroCarousel>
+          {featured.map((slide, i) => (
+            <CarouselSlide key={slide.id} slide={slide} priority={i === 0} />
+          ))}
+          <MainBanner />
+          {normal.map((slide, i) => (
+            <CarouselSlide
+              key={slide.id}
+              slide={slide}
+              priority={featured.length === 0 && i === 0}
+            />
+          ))}
+        </HeroCarousel>
+      </div>
       <Conector />
       <PaquitosGalery paquitos={paquitos} />
-    </>
+    </div>
   );
 }
