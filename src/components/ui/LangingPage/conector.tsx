@@ -20,26 +20,26 @@ export default function Conector() {
   );
 }
 
-function CreamDrip({ className = '' }: { className?: string }) {
-  return (
-    <svg
-      viewBox="0 0 1440 80"
-      preserveAspectRatio="none"
-      aria-hidden="true"
-      className={`pointer-events-none bg-transparent absolute inset-x-0 w-full ${className}`}
-    >
-      <path
-        fill="currentColor"
-        d="M0,0 H1440 V32
-           C1380,60 1320,22 1260,52
-           C1200,76 1140,28 1080,54
-           C1020,72 960,34 900,56
-           C840,76 780,28 720,52
-           C660,72 600,30 540,54
-           C480,76 420,30 360,56
-           C300,72 240,26 180,50
-           C120,70 60,28 0,46 Z"
-      />
-    </svg>
-  );
-}
+// function CreamDrip({ className = '' }: { className?: string }) {
+//   return (
+//     <svg
+//       viewBox="0 0 1440 80"
+//       preserveAspectRatio="none"
+//       aria-hidden="true"
+//       className={`pointer-events-none bg-transparent absolute inset-x-0 w-full ${className}`}
+//     >
+//       <path
+//         fill="currentColor"
+//         d="M0,0 H1440 V32
+//            C1380,60 1320,22 1260,52
+//            C1200,76 1140,28 1080,54
+//            C1020,72 960,34 900,56
+//            C840,76 780,28 720,52
+//            C660,72 600,30 540,54
+//            C480,76 420,30 360,56
+//            C300,72 240,26 180,50
+//            C120,70 60,28 0,46 Z"
+//       />
+//     </svg>
+//   );
+// }
