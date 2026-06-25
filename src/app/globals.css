@@ -96,10 +96,10 @@ body {
   /* =================== HERO ==================== */
   /* ============================================= */
   .hero-dot {
-    @apply h-2.5 w-2.5 cursor-pointer rounded-full bg-white/50 shadow-[0_1px_3px_rgba(0,0,0,0.4)] transition-all duration-300 hover:bg-white/80;
+    @apply h-2.5 w-2.5 cursor-pointer rounded-full bg-paco-dark/60 shadow-[0_1px_3px_rgba(0,0,0,0.45)] transition-all duration-300 hover:bg-paco-dark;
   }
   .hero-dot-active {
-    @apply w-6 bg-white;
+    @apply w-6 bg-paco-dark;
   }
   /* Color de texto distinto por breakpoint. El elemento aporta los valores vía
      CSS vars inline (--bp-color-mobile / --bp-color-desktop). Corte en lg (1024px),

@@ -8,7 +8,7 @@ type Phase = 'idle' | 'submitting' | 'revealing';
 
 const wait = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-export default function EmailInput() {
+export default function EmailInput({ launched = false }: { launched?: boolean }) {
   const [email, setEmail] = useState('');
   const [website, setWebsite] = useState(''); // honeypot anti-bots
   const [status, setStatus] = useState<Status>('idle');
@@ -49,7 +49,9 @@ export default function EmailInput() {
 
       nextMessage = data.alreadySubscribed
         ? 'Ya estabas en la lista 😊'
-        : '¡Te avisaremos del lanzamiento!';
+        : launched
+          ? '¡Suscrito! Gracias por unirte 🎉'
+          : '¡Te avisaremos del lanzamiento!';
     } catch (err) {
       nextStatus = 'error';
       nextMessage = err instanceof Error ? err.message : 'Algo salió mal.';

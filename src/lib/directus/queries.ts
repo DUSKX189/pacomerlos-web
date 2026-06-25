@@ -1,5 +1,6 @@
 import type { CarouselSlide, CarouselSlideRaw } from '@/types/carousel';
 import type { Paquito } from '@/types/paquitos';
+import type { LaunchSettings } from '@/types/launch';
 import { directusFetch } from './client';
 import { contentEnv, statusFilter, targetFilter } from './status';
 import { slugify } from '@/lib/slug';
@@ -86,6 +87,29 @@ export async function getPaquitos(): Promise<Paquito[]> {
   } catch (err) {
     console.error('[getPaquitos]', err);
     return [];
+  }
+}
+
+/**
+ * Lee el singleton `site_settings` (lectura pública en Directus). Devuelve un
+ * objeto, no un array. Si falla, degrada a `coming_soon` (nunca revela contenido
+ * de lanzamiento por un error de red).
+ */
+export async function getLaunchSettings(): Promise<LaunchSettings> {
+  try {
+    const { data } = await directusFetch<{
+      launch_status?: string;
+      campaign_sent?: boolean;
+    }>('/items/site_settings', {
+      params: { fields: 'launch_status,campaign_sent' },
+    });
+    return {
+      launch_status: data.launch_status === 'launched' ? 'launched' : 'coming_soon',
+      campaign_sent: Boolean(data.campaign_sent),
+    };
+  } catch (err) {
+    console.error('[getLaunchSettings]', err);
+    return { launch_status: 'coming_soon', campaign_sent: false };
   }
 }
 

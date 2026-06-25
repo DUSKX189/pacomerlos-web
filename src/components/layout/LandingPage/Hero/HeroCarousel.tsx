@@ -176,7 +176,7 @@ export default function HeroCarousel({ children }: HeroCarouselProps) {
       </div>
 
       {count > 1 && (
-        <div className="absolute bottom-6 left-1/2 z-10 flex -translate-x-1/2 gap-2">
+        <div className="absolute bottom-16 left-1/2 z-10 flex -translate-x-1/2 gap-2">
           {slides.map((_, i) => (
             <button
               key={i}
