@@ -1,0 +1,28 @@
+# Dependencias y artefactos de build (se regeneran dentro de la imagen)
+node_modules
+.next
+out
+build
+
+# Entorno local y secretos — NUNCA dentro de la imagen.
+# Las variables las inyecta Coolify (build args + runtime env).
+.env
+.env.*
+
+# Git / VCS
+.git
+.gitignore
+
+# Editor / SO
+.vscode
+.idea
+.DS_Store
+
+# Meta del propio Docker
+Dockerfile
+.dockerignore
+
+# Docs / misc
+README.md
+npm-debug.log*
+*.log
