@@ -228,31 +228,58 @@ Nota: para elementos que ya son Client Components y no quieren wrapper extra, se
 puede exponer un hook `useScrollReveal()` que devuelva un `ref` (no implementado
 aún; `observeReveal` ya está listo para ello).
 
-## Despliegue
+## Despliegue (Coolify en el VPS)
 
-### Previsualización (Vercel)
+El frontend Next.js se despliega con **Coolify** en el VPS (entorno tipo Vercel,
+self-hosted), junto a Directus, MariaDB y Listmonk. Coolify construye desde el
+repo de GitHub y publica cada entorno en su propia aplicación.
 
-- El proyecto está conectado a Vercel **solo para preview**. Producción va en el VPS.
-- Cada push genera una URL de preview única.
-- Variables de entorno configuradas en Vercel solo para entornos Preview/Development:
-  - `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
-  - `NEXT_PUBLIC_CONTENT_ENV=development` (muestra drafts + published)
-- `vercel.json` tiene `autoAlias: false` para que Vercel no promocione `main` como producción.
+### Estructura de ramas y entornos
 
-### Producción (VPS) — pendiente dockerizar
+Dos aplicaciones en Coolify, una por entorno, cada una atada a su rama:
 
-El frontend Next.js debe dockerizarse para correr en el VPS junto a Directus y MariaDB.
-Pasos previstos cuando se acometa:
+| Entorno | Rama | Domains | `NEXT_PUBLIC_CONTENT_ENV` |
+|---------|------|---------|---------------------------|
+| **Producción** | `prod` | `pacomerlos.com`, `www.pacomerlos.com` | `production` (solo published) |
+| **Desarrollo** | `main` | URL de preview diferenciada (subdominio Coolify) | `development` (drafts + published) |
 
-1. Añadir `output: 'standalone'` en `next.config.ts` para imagen mínima.
-2. Crear `Dockerfile` multistage (builder + runner sobre Node Alpine).
-3. Integrar el servicio `nextjs` en el `docker-compose.yml` existente del VPS,
-   en la misma red interna que Directus.
-4. Configurar Apache como reverse proxy hacia el contenedor Next.js (puerto 3000),
-   con SSL vía Certbot, igual que `cms.pacomerlos.com`.
-5. Variables de entorno de producción:
-   - `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
-   - `NEXT_PUBLIC_CONTENT_ENV=production` (solo published)
+- **`main` = rama de desarrollo**: el día a día se trabaja y se mergea aquí. Cada
+  push redeploya el entorno de desarrollo (preview).
+- **`prod` = rama de producción**: se despliega en los dominios públicos. Se
+  promociona contenido a producción haciendo merge/fast-forward de `main` → `prod`
+  y push de `prod`.
+
+### Flujo de promoción a producción
+
+```bash
+git checkout prod
+git merge --ff-only main   # o merge normal si prod ha divergido
+git push origin prod        # Coolify detecta el push y redeploya producción
+git checkout main
+```
+
+### Variables de entorno (por aplicación en Coolify)
+
+Comunes a ambos entornos salvo `NEXT_PUBLIC_CONTENT_ENV`:
+
+- `NEXT_PUBLIC_DIRECTUS_URL=https://cms.pacomerlos.com`
+- `NEXT_PUBLIC_CONTENT_ENV`: `production` (app prod) / `development` (app dev)
+- Listmonk (server-only, sin `NEXT_PUBLIC_`): `LISTMONK_API_URL`,
+  `LISTMONK_API_USER`, `LISTMONK_API_TOKEN`, `LISTMONK_LIST_ID`. En el VPS
+  `LISTMONK_API_URL` puede ser la URL interna de la red de Coolify
+  (`http://listmonk:9000`).
+
+### Notas
+
+- **SSL / dominios**: Coolify gestiona los certificados (Let's Encrypt) y el
+  enrutado de `pacomerlos.com` + `www.pacomerlos.com` a la app de producción.
+- **Cloudflare** sigue delante (proxy naranja): aplica aquí la Rate Limiting Rule
+  de `/api/notify` documentada en la sección de Newsletter.
+- **Build**: Coolify usa Nixpacks/Docker; si se opta por imagen mínima, añadir
+  `output: 'standalone'` en `next.config.ts`.
+- **Legacy Vercel**: el proyecto estuvo conectado a Vercel solo para preview. Con
+  Coolify, Vercel queda obsoleto; `vercel.json` puede eliminarse cuando se confirme
+  que no se usa.
 
 ## Newsletter de lanzamiento (Listmonk) — IMPLEMENTADO
 
