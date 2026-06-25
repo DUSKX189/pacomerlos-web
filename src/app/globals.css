@@ -101,6 +101,17 @@ body {
   .hero-dot-active {
     @apply w-6 bg-white;
   }
+  /* Color de texto distinto por breakpoint. El elemento aporta los valores vía
+     CSS vars inline (--bp-color-mobile / --bp-color-desktop). Corte en lg (1024px),
+     igual que la <source media> de las imágenes del carrusel. */
+  .bp-text-color {
+    color: var(--bp-color-mobile);
+  }
+  @media (min-width: 1024px) {
+    .bp-text-color {
+      color: var(--bp-color-desktop);
+    }
+  }
   /* ============================================= */
   /* =================== GALERY ================== */
   /* ============================================= */

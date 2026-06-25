@@ -13,23 +13,71 @@
 Slides del banner hero. Campos relevantes:
 
 - id, sort, status (draft|published), is_featured (bool)
+- target (enum: dev | prod | both, default dev) — entorno donde se muestra. Ver
+  "Targeting por entorno" más abajo.
 - title, description, button_function
 - img_mobile, img_tablet, img_desktop (UUIDs de assets de Directus)
-- title_color_preset (hex predefinido), title_color_custom (hex personalizado validado)
-- description_color_preset (hex predefinido), description_color_custom (hex personalizado validado)
+- **Color de escritorio (≥1024px)** — nombres originales:
+  - title_color_preset (hex predefinido), title_color_custom (hex personalizado validado)
+  - description_color_preset (hex predefinido), description_color_custom (hex personalizado validado)
+- **Override opcional tablet/móvil (<1024px)** — sufijo `_mobile`:
+  - title_color_preset_mobile, title_color_custom_mobile
+  - description_color_preset_mobile, description_color_custom_mobile
 
 Reglas de color (a aplicar en el adaptador del frontend):
 
-- El frontend resuelve el color final con esta prioridad: custom > preset > fallback
-- title:       title_color_custom       ?? title_color_preset       ?? "#0F0F0F"
-- description: description_color_custom ?? description_color_preset ?? "#0F0F0F"
-- El componente nunca recibe null en los colores — el fallback garantiza un valor siempre válido
+Hay **dos colores por elemento**: uno de escritorio (≥1024px) y un override
+opcional para tablet/móvil (<1024px). El corte es en `lg` (1024px), igual que la
+`<source media>` de las imágenes.
+
+- Escritorio (prioridad custom > preset > fallback):
+  - title_desktop:       title_color_custom       ?? title_color_preset       ?? "#0F0F0F"
+  - description_desktop:  description_color_custom ?? description_color_preset ?? "#0F0F0F"
+- Móvil/tablet (prioridad custom_mobile > preset_mobile > **color de escritorio**):
+  - title_mobile:       title_color_custom_mobile       ?? title_color_preset_mobile       ?? title_desktop
+  - description_mobile:  description_color_custom_mobile ?? description_color_preset_mobile ?? description_desktop
+- El override móvil es **opcional**: si va vacío, hereda el color de escritorio
+  (retrocompatible — los slides existentes siguen funcionando igual).
+- El componente nunca recibe null — el fallback garantiza siempre un valor válido.
+
+Render (`CarouselSlide.tsx`): el `toCarouselSlide` resuelve
+`title_color_desktop`/`title_color_mobile` (y description). El componente aplica la
+clase `.bp-text-color` y pasa ambos colores como CSS vars inline
+(`--bp-color-desktop` / `--bp-color-mobile`); el CSS elige según el breakpoint.
+
+> ⚠️ **Orden de despliegue**: crear los 4 campos `_mobile` en Directus **antes** de
+> desplegar este frontend. Como se piden en `fields[]`, si no existen, Directus
+> responde error y `getCarouselSlides` devuelve `[]`.
+
+#### Disposición recomendada en Directus (UX del editor)
+
+El modelo es de **override opcional con herencia**: el editor SIEMPRE define el
+color de escritorio; el de móvil/tablet es opcional y, si se deja vacío, hereda el
+de escritorio. Para que esto quede intuitivo en el panel:
+
+1. **Grupo "Color de texto — Escritorio"** (siempre visible): `title_color_preset`,
+   `title_color_custom`, `description_color_preset`, `description_color_custom`.
+2. **Grupo "Override móvil/tablet (opcional)"** (tipo *Detail Group*, colapsable y
+   plegado por defecto): los 4 campos `_mobile`. Añadir una **nota** al grupo:
+   *"Déjalo vacío para usar el mismo color que en escritorio. Rellénalo solo si
+   quieres un color distinto en pantallas <1024px."*
+
+Esto cubre ambos casos sin lógica extra: **vacío = mismo color**, **relleno =
+diferenciado**.
+
+Alternativa (más explícita, opcional): añadir un booleano `color_movil_distinto`
+y mostrar los campos `_mobile` solo cuando esté activado (campos condicionales de
+Directus). Más visual, pero añade un campo; con grupo colapsable + nota suele
+bastar. Si se adopta el booleano, el adaptador del frontend **no** necesita
+cambios (la cascada `?? desktop` ya hace lo correcto cuando los `_mobile` van vacíos).
 
 ### paquitos_data
 
 Catálogo de productos. Campos:
 
 - id, name, tagline, image_main (UUID)
+- target (enum: dev | prod | both, default dev) — entorno donde se muestra. Ver
+  "Targeting por entorno" más abajo.
 - general_description, interior_description, topping_description
 - primary_color, secondary_color (string, código hex — pueden ser null)
 
@@ -39,6 +87,52 @@ Catálogo de productos. Campos:
 2. Frontend DESARROLLO: filter[status][_in]=draft,published
 3. Equipo aprueba → status = published
 4. Frontend PRODUCCIÓN: filter[status][_eq]=published
+
+## Targeting por entorno (campo `target`)
+
+Permite decidir **por registro** en qué entorno se visualiza un slide o paquito,
+de forma **independiente** del despliegue de Coolify (rama prod vs main).
+
+### Campo en Directus (crear en ambas colecciones)
+
+- Nombre: `target`
+- Tipo: enum (dropdown) con valores `dev`, `prod`, `both`
+- Default: `dev` (un registro nuevo se ve primero solo en desarrollo; luego se
+  promociona a `both` o `prod`)
+- Aplicar a: `carousel_slides` **y** `paquitos_data`
+
+> ⚠️ **Orden de despliegue**: crear el campo `target` (con default y backfill de
+> los registros existentes) **antes** de desplegar el frontend con el filtro. Si el
+> campo no existe, el fetch a Directus falla y `getCarouselSlides`/`getPaquitos`
+> devuelven `[]` (degradación controlada, pero la sección sale vacía).
+
+### Semántica del filtro (frontend)
+
+- DESARROLLO (`NEXT_PUBLIC_CONTENT_ENV=development`): `target ∈ (dev, both)`
+- PRODUCCIÓN (`NEXT_PUBLIC_CONTENT_ENV=production`): `target ∈ (prod, both)`
+
+| `target` | Se ve en dev | Se ve en prod |
+|----------|:---:|:---:|
+| `dev`  | ✅ | ❌ |
+| `prod` | ❌ | ✅ |
+| `both` | ✅ | ✅ |
+
+### Relación con `status` (ortogonal, solo carrusel)
+
+`status` (draft/published) es el **flujo de aprobación**; `target` es el **destino
+de entorno**. Se combinan con AND:
+
+- Carrusel en PROD: `status = published` **AND** `target ∈ (prod, both)`
+- Carrusel en DEV:  `status ∈ (draft, published)` **AND** `target ∈ (dev, both)`
+- Paquitos (sin status): solo `target ∈ (…)` según entorno
+
+### Implementación frontend
+
+- `src/lib/directus/status.ts` — `targetFilter()` devuelve
+  `filter[target][_in]=dev,both` (dev) o `prod,both` (prod), según `contentEnv()`.
+- `src/lib/directus/queries.ts` — `getCarouselSlides` fusiona
+  `{ ...statusFilter(), ...targetFilter() }`; `getPaquitos` aplica `targetFilter()`.
+  En Directus, varios `filter[campo]` distintos en la misma query se combinan con AND.
 
 ## Lógica de ordenación del carrusel (Next.js)
 
