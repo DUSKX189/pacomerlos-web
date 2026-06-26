@@ -2,7 +2,7 @@ import type { CarouselSlide, CarouselSlideRaw } from '@/types/carousel';
 import type { Paquito } from '@/types/paquitos';
 import type { LaunchSettings } from '@/types/launch';
 import { directusFetch } from './client';
-import { contentEnv, statusFilter, targetFilter } from './status';
+import { statusFilter, targetFilter } from './status';
 import { slugify } from '@/lib/slug';
 
 /** Forma cruda que devuelve la API (sin el `slug`, que se calcula en frontend). */
@@ -70,7 +70,6 @@ export async function getCarouselSlides(): Promise<CarouselSlide[]> {
       '/items/carousel_slides',
       { params: { ...statusFilter(), ...targetFilter(), fields: CAROUSEL_FIELDS } },
     );
-    if (contentEnv() === 'development') logCarouselSlides(data);
     return data.map(toCarouselSlide);
   } catch (err) {
     console.error('[getCarouselSlides]', err);
@@ -111,20 +110,4 @@ export async function getLaunchSettings(): Promise<LaunchSettings> {
     console.error('[getLaunchSettings]', err);
     return { launch_status: 'coming_soon', campaign_sent: false };
   }
-}
-
-function logCarouselSlides(data: CarouselSlideRaw[]) {
-  console.log(`\n[carousel_slides] ${data.length} item(s)`);
-  console.table(
-    data.map(s => ({
-      id: s.id,
-      sort: s.sort,
-      is_featured: s.is_featured,
-      title: s.title,
-      title_color_custom: s.title_color_custom,
-      title_color_preset: s.title_color_preset,
-      description_color_custom: s.description_color_custom,
-      description_color_preset: s.description_color_preset,
-    })),
-  );
 }

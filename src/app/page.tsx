@@ -3,10 +3,13 @@ import CarouselSlide from '@/components/layout/LandingPage/Hero/CarouselSlide';
 import HeroCarousel from '@/components/layout/LandingPage/Hero/HeroCarousel';
 import MainBanner from '@/components/layout/LandingPage/Hero/MainBanner';
 import { ConectorTop } from '@/components/ui/LangingPage/conector';
-import { getCarouselSlides, getPaquitos } from '@/lib/directus/queries';
+import { getCarouselSlides, getLaunchSettings, getPaquitos } from '@/lib/directus/queries';
+import { contentEnv } from '@/lib/directus/status';
 import { buildCarouselOrder } from '@/utils/carousel-order';
 import PaquitosGalery from '@/components/layout/LandingPage/PaquitoGalery/paquitosGalery';
 import ConectorMiddle from '@/components/ui/LangingPage/ConectorMiddle';
+import Encuentralos from '@/components/layout/LandingPage/Encuentralos/Encuentralos';
+import { MOCK_STORES } from '@/lib/stores/mock';
 
 export const metadata: Metadata = {
   title: "Paquitos Artesanales en Madrid",
@@ -27,6 +30,13 @@ export const revalidate = 30;
 export default async function Home() {
   const [slides, paquitos] = await Promise.all([getCarouselSlides(), getPaquitos()]);
   const { featured, normal } = buildCarouselOrder(slides);
+
+  // Localizador "Encuéntralos": en desarrollo siempre visible (para maquetar/probar);
+  // en producción solo cuando el sitio está "launched" (site_settings del CMS). El
+  // short-circuit evita pedir site_settings en dev.
+  const showLocator =
+    contentEnv() === 'development' ||
+    (await getLaunchSettings()).launch_status === 'launched';
 
   return (
     <div className="relative">
@@ -52,6 +62,10 @@ export default async function Home() {
         bottomText="Nosotros nos manchamos las manos"
         bgColor="var(--paco-orange)"
       />
+      {/* Datos provisionales (MOCK_STORES); sustituir por getPuntosVenta() cuando se
+          defina el origen en Directus — ver docs/encuentralos-store-locator.md.
+          Visibilidad: dev siempre; prod solo si site_settings = "launched". */}
+      {showLocator && <Encuentralos stores={MOCK_STORES} />}
     </div>
   );
 }
