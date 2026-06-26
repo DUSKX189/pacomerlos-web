@@ -444,6 +444,45 @@ body {
       opacity: 1 !important;
     }
   }
+
+  /* ============================================= */
+  /* ============== PANEL ACORDEÓN =============== */
+  /* ============================================= */
+  /* Portado de paneles-acorderon-demo.html. Móvil/tablet: apilado en columna,
+     se expande con click (clase `.active`, la gestiona el componente cliente).
+     Escritorio (≥1024px): en fila, se expande con hover/focus (CSS puro). */
+  .acc-stage {
+    display: flex;
+    flex-direction: column;
+  }
+  .acc-panel {
+    position: relative;
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    cursor: pointer;
+    outline: none;
+    transition: flex-grow 0.8s cubic-bezier(0.16, 0.84, 0.3, 1);
+  }
+
+  /* Móvil / tablet (<1024px): expansión por click */
+  @media (max-width: 1023px) {
+    .acc-stage:has(.acc-panel.active) .acc-panel { flex-grow: 0.7; }
+    .acc-stage:has(.acc-panel.active) .acc-panel.active { flex-grow: 3.6; }
+  }
+
+  /* Escritorio (≥1024px): expansión por hover/focus */
+  @media (min-width: 1024px) {
+    .acc-stage { flex-direction: row; }
+    .acc-stage:hover .acc-panel { flex-grow: 0.55; }
+    .acc-stage .acc-panel:hover,
+    .acc-panel:focus-within { flex-grow: 4.2; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .acc-panel { transition: none; }
+  }
 }
 
 /* ════════════════════════════════════

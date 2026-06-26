@@ -9,6 +9,7 @@ import { buildCarouselOrder } from '@/utils/carousel-order';
 import PaquitosGalery from '@/components/layout/LandingPage/PaquitoGalery/paquitosGalery';
 import ConectorMiddle from '@/components/ui/LangingPage/ConectorMiddle';
 import Encuentralos from '@/components/layout/LandingPage/Encuentralos/Encuentralos';
+import PanelAcordeon from '@/components/layout/LandingPage/PanelAcordeon/PanelAcordeon';
 import { MOCK_STORES } from '@/lib/stores/mock';
 
 export const metadata: Metadata = {
@@ -62,6 +63,7 @@ export default async function Home() {
         bottomText="Nosotros nos manchamos las manos"
         bgColor="var(--paco-orange)"
       />
+      <PanelAcordeon />
       {/* Datos provisionales (MOCK_STORES); sustituir por getPuntosVenta() cuando se
           defina el origen en Directus — ver docs/encuentralos-store-locator.md.
           Visibilidad: dev siempre; prod solo si site_settings = "launched". */}
