@@ -7,10 +7,9 @@ import { getCarouselSlides, getLaunchSettings, getPaquitos } from '@/lib/directu
 import { contentEnv } from '@/lib/directus/status';
 import { buildCarouselOrder } from '@/utils/carousel-order';
 import PaquitosGalery from '@/components/layout/LandingPage/PaquitoGalery/paquitosGalery';
-import ConectorMiddle from '@/components/ui/LangingPage/ConectorMiddle';
+// import ConectorMiddle from '@/components/ui/LangingPage/ConectorMiddle';
 import Encuentralos from '@/components/layout/LandingPage/Encuentralos/Encuentralos';
-import Anatomia from '@/components/layout/LandingPage/Anatomia/Anatomia';
-import Pacommunity from '@/components/layout/LandingPage/Pacommunity/Pacommunity';
+import PanelAcordeon from '@/components/layout/LandingPage/PanelAcordeon/PanelAcordeon';
 import { MOCK_STORES } from '@/lib/stores/mock';
 
 export const metadata: Metadata = {
@@ -59,11 +58,12 @@ export default async function Home() {
       </div>
       <ConectorTop />
       <PaquitosGalery paquitos={paquitos} />
-      <ConectorMiddle
+      {/* <ConectorMiddle
         topText="Ni repostería fina, ni postureo"
         bottomText="Nosotros nos manchamos las manos"
         bgColor="var(--paco-orange)"
-      />
+      /> */}
+      <PanelAcordeon />
       {/* Datos provisionales (MOCK_STORES); sustituir por getPuntosVenta() cuando se
           defina el origen en Directus — ver docs/encuentralos-store-locator.md.
           Visibilidad: dev siempre; prod solo si site_settings = "launched". */}
