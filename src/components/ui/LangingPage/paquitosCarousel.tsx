@@ -9,6 +9,7 @@ import {
 } from 'react';
 import PaquitoHint from './paquitoHint';
 import type { Paquito } from '@/types/paquitos';
+//import Reveal from '@/components/ui/Reveal';
 
 const AUTOPLAY_MS = 8000;
 const DRAG_THRESHOLD = 0.15;
@@ -130,6 +131,7 @@ export default function PaquitosCarousel({ paquitos }: PaquitosCarouselProps) {
             <PaquitoHint paquito={paquito} />
           </div>
         ))}
+
       </div>
       <p
         key={currentPaquito.id}

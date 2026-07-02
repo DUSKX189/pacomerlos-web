@@ -13,7 +13,7 @@ import Encuentralos from '@/components/layout/LandingPage/Encuentralos/Encuentra
 import PanelAcordeon from '@/components/layout/LandingPage/PanelAcordeon/PanelAcordeon';
 import { MOCK_STORES } from '@/lib/stores/mock';
 import AnatomiaAlt from '@/components/layout/LandingPage/Anatomia/AnatomiaAlt';
-// import Pacommunity from '@/components/layout/LandingPage/Pacommunity/Pacommunity';
+import Pacommunity from '@/components/layout/LandingPage/Pacommunity/Pacommunity';
 
 export const metadata: Metadata = {
   title: "Paquitos Artesanales en Madrid",
@@ -58,9 +58,9 @@ export default async function Home() {
       <ConectorTop />
       <PaquitosGalery paquitos={paquitos} />
       <AnatomiaAlt />
-      <PanelAcordeon />
+      {/* <PanelAcordeon /> */}
+      <Pacommunity />
       {showLocator && <Encuentralos stores={MOCK_STORES} />}
-      {/* <Pacommunity /> */}
     </div>
   );
 }

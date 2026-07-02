@@ -61,7 +61,7 @@ export default function PanelAcordeon() {
 
       <Reveal className="mb-5 flex items-center justify-center gap-3.5">
         <span className="h-px w-8 bg-paco-orange" />
-        <span className="text-xl font-semibold uppercase tracking-widest text-paco-orange">
+        <span className="text-xl font-semibold uppercase tracking-widest text-paco-dark">
           Sin atajos
         </span>
         <span className="h-px w-8 bg-paco-orange" />
@@ -69,7 +69,7 @@ export default function PanelAcordeon() {
       <Reveal
         as="h2"
         delay={1}
-        className="text-center font-chunko text-5xl uppercase leading-[0.9] text-paco-orange md:text-7xl lg:text-8xl pb-10"
+        className="text-center font-chunko text-5xl uppercase leading-[0.9] text-paco-dark/75 md:text-7xl lg:text-8xl pb-10"
       >
         Del horno <br />a tus manos
       </Reveal>

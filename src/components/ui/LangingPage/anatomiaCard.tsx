@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Reveal from "@/components/ui/Reveal";
 
 export interface AnatomiaCardProps {
   kicker: string;
@@ -19,7 +20,14 @@ export default function AnatomiaCard({ kicker, word, desc, bgColor, img, imgAlt,
       <div
         className={`mx-auto flex w-full max-w-450 flex-col pt-6 px-6 lg:items-center lg:justify-between md:px-12 lg:px-20 ${reverse ? 'lg:flex-row-reverse' : 'lg:flex-row'}`}
       >
-        <div className="card-text">
+        <Reveal
+          as="div"
+          className="card-text"
+          direction={reverse ? 'left' : 'right'}
+          distance="2.5rem"
+          duration={1.5}
+          repeat
+        >
           <p className="card-kicker" style={{ color: textColor }}>
             {kicker}
           </p>
@@ -29,8 +37,16 @@ export default function AnatomiaCard({ kicker, word, desc, bgColor, img, imgAlt,
           <p className="card-desc" style={{ color: textColor }}>
             {desc}
           </p>
-        </div>
-        <div className="card-photo">
+        </Reveal>
+        <Reveal
+          as="div"
+          className="card-photo"
+          direction={reverse ? 'right' : 'left'}
+          distance="5rem"
+          duration={1.5}
+          delay={1}
+          repeat
+        >
           <Image
             src={img}
             alt={imgAlt}
@@ -38,7 +54,7 @@ export default function AnatomiaCard({ kicker, word, desc, bgColor, img, imgAlt,
             height={imgHeight}
             className="h-auto max-h-85 w-auto max-w-full"
           />
-        </div>
+        </Reveal>
       </div>
     </div>
   );
