@@ -441,13 +441,50 @@ Dos aplicaciones en Coolify, una por entorno, cada una atada a su rama:
   promociona contenido a producción haciendo merge/fast-forward de `main` → `prod`
   y push de `prod`.
 
+> **Qué se ve en producción NO depende de la rama**, sino de `launch_status` en
+> Directus (ver "Gate de lanzamiento"). Mientras sea `coming_soon`, el dominio
+> público muestra solo la holding page (`ComingSoon`: "Muy pronto" + alta en la
+> newsletter) aunque `prod` contenga la web completa. Por eso es seguro promocionar
+> `main` → `prod` antes del lanzamiento: el código nuevo queda desplegado pero oculto.
+
+### Reglas para mantener las ramas sincronizadas
+
+Objetivo: **`prod` siempre es ancestro de `main`** (todo lo que hay en producción
+está también en desarrollo). Así la promoción es siempre un fast-forward limpio.
+
+1. **Todo cambio nace en `main`** y llega a `prod` por promoción (abajo).
+2. **Hotfix urgente directo en `prod`** (solo si no se puede promocionar `main`
+   porque trae trabajo a medias): justo después, **mergear `prod` en `main`** y
+   pushear ambas. No dejar commits solo en `prod`.
+3. **Nunca `rebase` de ramas publicadas** (`main`/`prod`): reescribe historia que ya
+   está en GitHub/Coolify. Usar `merge`.
+4. **Nunca hardcodear la fecha de lanzamiento** en el frontend ni en los correos sin
+   actualizar a la vez el cron del Directus Flow (ver "Plan de lanzamiento").
+
+Comprobación rápida (debe imprimir `0` en la primera cifra = nada solo en prod):
+
+```bash
+git fetch origin
+git rev-list --left-right --count origin/prod...origin/main   # <solo-prod> <solo-main>
+```
+
 ### Flujo de promoción a producción
 
 ```bash
 git checkout prod
-git merge --ff-only main   # o merge normal si prod ha divergido
+git merge --ff-only main   # si falla, prod tiene commits propios: ver regla 2
 git push origin prod        # Coolify detecta el push y redeploya producción
 git checkout main
+```
+
+### Hotfix en `prod` y vuelta a `main`
+
+```bash
+git checkout prod   # commit del hotfix aquí
+git push origin prod
+git checkout main
+git merge prod      # resolver conflictos quedándose con lo de prod donde aplique
+git push origin main
 ```
 
 ### Variables de entorno (por aplicación en Coolify)
@@ -525,8 +562,10 @@ const revealed =
   se estarían recogiendo datos personales con el enlace de privacidad roto.
 - `getLaunchSettings()` degrada a `coming_soon` si Directus falla: un error de red
   nunca revela la web antes de tiempo.
-- Hay un **segundo gate más fino** en `(site)/page.tsx` con la misma condición:
-  `coming_soon` → renderiza `<CuentaAtras />`; `launched` → renderiza `<Encuentralos />`.
+- En `(site)/page.tsx` la misma condición decide si se renderiza `<Encuentralos />`.
+  (La antigua `<CuentaAtras />` y el `Countdown` se eliminaron el 2026-10-14 al
+  retirar la fecha de lanzamiento: nunca llegaban a verse, porque con
+  `coming_soon` el gate del layout ya oculta la página.)
 - El root layout está deliberadamente vacío (solo `<html>`/`<body>`/fuentes): si el
   chrome o el gate vivieran ahí, no habría forma de exceptuar las páginas legales.
 
@@ -542,7 +581,7 @@ Usuario → ① POST /api/notify { email, website(honeypot) }
        → Listmonk POST /api/subscribers: alta en lista 3 (creds server-only)
        → Listmonk POST /api/tx: correo de bienvenida (plantilla 6), best-effort
 
-Cron   → ② Directus Flow programado (30-sep 07:00 UTC = 09:00 Madrid)
+Cron   → ② Directus Flow programado (SIN FECHA: ver "Plan de lanzamiento")
        → launch_status = "launched" en site_settings
        → PUT /api/campaigns/4/status {"status":"running"} en Listmonk
        → campaign_sent = true (guarda anti-reenvío)
@@ -698,8 +737,8 @@ done
 | Contenedor Directus | **UTC** |
 | Contenedor Listmonk | Europe/Madrid |
 
-El cron de un Directus Flow se evalúa **en UTC**. Lanzamiento acordado:
-**30-sep-2026, 09:00 hora de Madrid = 07:00 UTC**.
+El cron de un Directus Flow se evalúa **en UTC** (09:00 Madrid = 07:00 UTC en
+horario de verano, 08:00 UTC en invierno). Fecha de lanzamiento: **sin definir**.
 
 ### Comandos de verificación (VPS)
 
@@ -745,7 +784,10 @@ docker exec directus-database-1 sh -c "mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" 
 
 - [x] ~~**Email de confirmación de alta**~~ — hecho: plantilla tx id 6
   (`emails/confirmacion.html`), enviada desde `sendConfirmationEmail()`.
-- [ ] **Cerrar el lanzamiento del 30-sep** — ver "Plan de lanzamiento" más abajo.
+- [ ] **Fijar nueva fecha de lanzamiento y cerrar el lanzamiento** — ver "Plan de
+  lanzamiento" más abajo. Hasta entonces, la holding page no muestra fecha.
+- [ ] **Volcar el nuevo copy de `emails/confirmacion.html` a la plantilla tx 6 de
+  Listmonk** (sin la frase "Apunta la fecha: 30 de septiembre").
 - [ ] **Paquito destacado / edición limitada**: diferenciar visualmente un paquito nuevo o por tiempo limitado del resto del catálogo.
   - **Directus**: añadir campos a `paquitos_data`: `is_new` (bool) y/o `is_limited` (bool) + opcionalmente `badge_label` (string, ej. "Nuevo", "Edición limitada").
   - **Frontend**: variante visual en `PacoCard.tsx` (desktop) y `PacoCardMobileAlt.tsx` (mobile) — puede ser un badge/ribbon, borde especial, animación sutil, etc.
@@ -753,14 +795,24 @@ docker exec directus-database-1 sh -c "mysql -uroot -p\"\$MYSQL_ROOT_PASSWORD\" 
   - **Query**: actualizar `getPaquitos()` en `src/lib/directus/queries.ts` para incluir los nuevos campos en el `fields[]`.
 - [ ] **Diseñar imagen OG** (`public/img/PACOSJUNTOS.png`): imagen de 1200×630 px para la previsualización al compartir enlaces en redes sociales. Referenciada en `og:image` de `page.tsx` y `sabores/page.tsx`. Debe verse bien en proporción 1.91:1; evitar texto importante en los bordes.
 
-## Plan de lanzamiento — 30-sep-2026, 09:00 Madrid (07:00 UTC)
+## Plan de lanzamiento — SIN FECHA (histórico: 10-sep → 30-sep-2026)
 
-> 📅 **Fecha aplazada (2026-09-04)**: el lanzamiento se movió del **10-sep** al
-> **30-sep**. Ya está actualizado en el repo (cuenta atrás, copys de `ComingSoon`
-> y `CuentaAtras`, `emails/confirmacion.html` y este documento). **Falta cambiar el
-> cron del Directus Flow en el VPS** a `0 0 7 30 9 *` — mientras no se toque, el
-> flow sigue armado para el 10-sep. El 30-sep Madrid sigue en CEST (UTC+2; el
-> horario de verano acaba el 25-oct), así que 09:00 Madrid = 07:00 UTC igual que antes.
+> 📅 **Fecha retirada (2026-10-14)**: el lanzamiento del 30-sep no se produjo
+> (`launch_status` sigue en `coming_soon`, `campaign_sent=false`) y se ha quitado la
+> fecha de la web: `ComingSoon` ya no muestra fecha ni cuenta atrás (solo "Muy
+> pronto" + alta en la newsletter), se eliminaron `CuentaAtras.tsx`/`Countdown.tsx`
+> y el correo de confirmación ya no cita fecha.
+>
+> **Pendiente fuera del repo**:
+> - **Desactivar (`inactive`) el Flow `Lanzamiento Paco Merlos`** o comprobar su
+>   cron: con cron anual (`0 0 7 30 9 *`) volvería a disparar el próximo 30-sep y
+>   lanzaría la web y la campaña sin aviso.
+> - Actualizar la plantilla tx 6 de Listmonk con el nuevo `emails/confirmacion.html`.
+>
+> Cuando haya fecha nueva: reactivar el flow con el cron correcto (en UTC) y, si se
+> quiere mostrar fecha/contador otra vez, recuperarlos del historial de git
+> (`git log --all -- src/components/layout/LandingPage/CuentaAtras/Countdown.tsx`).
+> Las fases de abajo se conservan como referencia del procedimiento.
 
 Objetivo: que a las 09:00 hora de Madrid, **sin intervención manual**, la web se
 revele y salga la campaña 4 a la lista 3.
@@ -942,8 +994,8 @@ curl -X PUT https://lists.pacomerlos.com/api/campaigns/4/status \
 - Arreglar el chrome de `(legal)`: tras el lanzamiento las páginas legales deberían
   usar `SiteChrome`, no `HoldingLayout`. Corregir también el comentario falso de
   `SiteChrome.tsx`.
-- Retirar o reutilizar `CuentaAtras`/`Countdown` y `ComingSoon` (quedan como código
-  muerto en el camino `launched`).
+- `ComingSoon` queda como código muerto en el camino `launched` (`CuentaAtras` y
+  `Countdown` ya se eliminaron el 2026-10-14).
 
 ## Próximos pasos
 
