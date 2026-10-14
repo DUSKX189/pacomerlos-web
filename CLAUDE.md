@@ -518,13 +518,50 @@ Dos aplicaciones en Coolify, una por entorno, cada una atada a su rama:
   promociona contenido a producción haciendo merge/fast-forward de `main` → `prod`
   y push de `prod`.
 
+> **Qué se ve en producción NO depende de la rama**, sino de `launch_status` en
+> Directus (ver "Gate de lanzamiento"). Mientras sea `coming_soon`, el dominio
+> público muestra solo la holding page (`ComingSoon`: "Muy pronto" + alta en la
+> newsletter) aunque `prod` contenga la web completa. Por eso es seguro promocionar
+> `main` → `prod` antes del lanzamiento: el código nuevo queda desplegado pero oculto.
+
+### Reglas para mantener las ramas sincronizadas
+
+Objetivo: **`prod` siempre es ancestro de `main`** (todo lo que hay en producción
+está también en desarrollo). Así la promoción es siempre un fast-forward limpio.
+
+1. **Todo cambio nace en `main`** y llega a `prod` por promoción (abajo).
+2. **Hotfix urgente directo en `prod`** (solo si no se puede promocionar `main`
+   porque trae trabajo a medias): justo después, **mergear `prod` en `main`** y
+   pushear ambas. No dejar commits solo en `prod`.
+3. **Nunca `rebase` de ramas publicadas** (`main`/`prod`): reescribe historia que ya
+   está en GitHub/Coolify. Usar `merge`.
+4. **Nunca hardcodear la fecha de lanzamiento** en el frontend ni en los correos sin
+   actualizar a la vez el cron del Directus Flow (ver "Plan de lanzamiento").
+
+Comprobación rápida (debe imprimir `0` en la primera cifra = nada solo en prod):
+
+```bash
+git fetch origin
+git rev-list --left-right --count origin/prod...origin/main   # <solo-prod> <solo-main>
+```
+
 ### Flujo de promoción a producción
 
 ```bash
 git checkout prod
-git merge --ff-only main   # o merge normal si prod ha divergido
+git merge --ff-only main   # si falla, prod tiene commits propios: ver regla 2
 git push origin prod        # Coolify detecta el push y redeploya producción
 git checkout main
+```
+
+### Hotfix en `prod` y vuelta a `main`
+
+```bash
+git checkout prod   # commit del hotfix aquí
+git push origin prod
+git checkout main
+git merge prod      # resolver conflictos quedándose con lo de prod donde aplique
+git push origin main
 ```
 
 ### Variables de entorno (por aplicación en Coolify)
@@ -602,8 +639,10 @@ const revealed =
   se estarían recogiendo datos personales con el enlace de privacidad roto.
 - `getLaunchSettings()` degrada a `coming_soon` si Directus falla: un error de red
   nunca revela la web antes de tiempo.
-- Hay un **segundo gate más fino** en `(site)/page.tsx` con la misma condición:
-  `coming_soon` → renderiza `<CuentaAtras />`; `launched` → renderiza `<Encuentralos />`.
+- En `(site)/page.tsx` la misma condición decide si se renderiza `<Encuentralos />`.
+  (La antigua `<CuentaAtras />` y el `Countdown` se eliminaron el 2026-10-14 al
+  retirar la fecha de lanzamiento: nunca llegaban a verse, porque con
+  `coming_soon` el gate del layout ya oculta la página.)
 - El root layout está deliberadamente vacío (solo `<html>`/`<body>`/fuentes): si el
   chrome o el gate vivieran ahí, no habría forma de exceptuar las páginas legales.
 
@@ -619,7 +658,7 @@ Usuario → ① POST /api/notify { email, website(honeypot) }
        → Listmonk POST /api/subscribers: alta en lista 3 (creds server-only)
        → Listmonk POST /api/tx: correo de bienvenida (plantilla 6), best-effort
 
-Cron   → ② Directus Flow programado (10-sep 07:00 UTC = 09:00 Madrid)
+Cron   → ② Directus Flow programado (SIN FECHA: ver "Plan de lanzamiento")
        → launch_status = "launched" en site_settings
        → PUT /api/campaigns/4/status {"status":"running"} en Listmonk
        → campaign_sent = true (guarda anti-reenvío)
@@ -775,8 +814,8 @@ done
 | Contenedor Directus | **UTC** |
 | Contenedor Listmonk | Europe/Madrid |
 
-El cron de un Directus Flow se evalúa **en UTC**. Lanzamiento acordado:
-**10-sep-2026, 09:00 hora de Madrid = 07:00 UTC**.
+El cron de un Directus Flow se evalúa **en UTC** (09:00 Madrid = 07:00 UTC en
+horario de verano, 08:00 UTC en invierno). Fecha de lanzamiento: **sin definir**.
 
 ### Comandos de verificación (VPS)
 
@@ -967,7 +1006,10 @@ localizador funciona igual: solo se pierde el orden por cercanía y la distancia
 
 - [x] ~~**Email de confirmación de alta**~~ — hecho: plantilla tx id 6
   (`emails/confirmacion.html`), enviada desde `sendConfirmationEmail()`.
-- [ ] **Cerrar el lanzamiento del 10-sep** — ver "Plan de lanzamiento" más abajo.
+- [ ] **Fijar nueva fecha de lanzamiento y cerrar el lanzamiento** — ver "Plan de
+  lanzamiento" más abajo. Hasta entonces, la holding page no muestra fecha.
+- [ ] **Volcar el nuevo copy de `emails/confirmacion.html` a la plantilla tx 6 de
+  Listmonk** (sin la frase "Apunta la fecha: 30 de septiembre").
 - [x] ~~**Rehacer el mapa de puntos de venta con Google Maps**~~ — hecho: `StoreMap.tsx` +
   `src/lib/maps/google-maps.ts`, Leaflet desinstalado. **Queda añadir
   `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` y `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` a las apps de
@@ -979,7 +1021,24 @@ localizador funciona igual: solo se pierde el orden por cercanía y la distancia
   - **Query**: actualizar `getPaquitos()` en `src/lib/directus/queries.ts` para incluir los nuevos campos en el `fields[]`.
 - [ ] **Diseñar imagen OG** (`public/img/PACOSJUNTOS.png`): imagen de 1200×630 px para la previsualización al compartir enlaces en redes sociales. Referenciada en `og:image` de `page.tsx` y `sabores/page.tsx`. Debe verse bien en proporción 1.91:1; evitar texto importante en los bordes.
 
-## Plan de lanzamiento — 10-sep-2026, 09:00 Madrid (07:00 UTC)
+## Plan de lanzamiento — SIN FECHA (histórico: 10-sep → 30-sep-2026)
+
+> 📅 **Fecha retirada (2026-10-14)**: el lanzamiento del 30-sep no se produjo
+> (`launch_status` sigue en `coming_soon`, `campaign_sent=false`) y se ha quitado la
+> fecha de la web: `ComingSoon` ya no muestra fecha ni cuenta atrás (solo "Muy
+> pronto" + alta en la newsletter), se eliminaron `CuentaAtras.tsx`/`Countdown.tsx`
+> y el correo de confirmación ya no cita fecha.
+>
+> **Pendiente fuera del repo**:
+> - **Desactivar (`inactive`) el Flow `Lanzamiento Paco Merlos`** o comprobar su
+>   cron: con cron anual (`0 0 7 30 9 *`) volvería a disparar el próximo 30-sep y
+>   lanzaría la web y la campaña sin aviso.
+> - Actualizar la plantilla tx 6 de Listmonk con el nuevo `emails/confirmacion.html`.
+>
+> Cuando haya fecha nueva: reactivar el flow con el cron correcto (en UTC) y, si se
+> quiere mostrar fecha/contador otra vez, recuperarlos del historial de git
+> (`git log --all -- src/components/layout/LandingPage/CuentaAtras/Countdown.tsx`).
+> Las fases de abajo se conservan como referencia del procedimiento.
 
 Objetivo: que a las 09:00 hora de Madrid, **sin intervención manual**, la web se
 revele y salga la campaña 4 a la lista 3.
@@ -1011,11 +1070,11 @@ no existe**: el día D no habría enviado nada. Queda **`inactive`** y renombrad
 
 Flow vigente: **`Lanzamiento Paco Merlos`**, id `80088468-97b6-4468-ad16-0c493cfa7ccb`,
 `status: active`, `trigger: schedule`, `accountability: all`,
-`options: {"cron":"0 0 7 10 9 *"}`.
+`options: {"cron":"0 0 7 30 9 *"}`.
 
 Cron de **6 campos** (`seg min hora día mes dow`), **confirmado empíricamente** con un
 flow sonda (`*/10 * * * * *` + Log to Console → salía cada 10 s en
-`docker logs directus-directus-1`). Se evalúa en **UTC** → dispara el 10-sep a las
+`docker logs directus-directus-1`). Se evalúa en **UTC** → dispara el 30-sep a las
 07:00 UTC = 09:00 Madrid.
 
 Operaciones, en cadena por la salida de éxito (la web se revela **antes** de enviar,
@@ -1050,7 +1109,7 @@ module.exports = async function (data) {
    **`token notify_api:<TOKEN>`** entero (17 + 32 = **49 caracteres**). Mal puesta,
    Listmonk responde 401, la cadena se corta y **la web se revela sin enviar correo**.
 2. **Tabulador invisible en el cron.** Al pegar la expresión se coló un `\t` inicial
-   (`{"cron":"\t0 0 7 10 9 *"}`). Escribir el campo a mano, sin pegar.
+   (`{"cron":"\t0 0 7 30 9 *"}`). Escribir el campo a mano, sin pegar.
 3. **`permissions` inconsistente.** `mark_sent` se guardó con `$trigger`; con trigger
    `schedule` no hay usuario detrás, así que la escritura puede denegarse y dejar
    `campaign_sent` en `false`. Las cuatro operaciones deben ir con **`$full`**.
@@ -1060,7 +1119,7 @@ module.exports = async function (data) {
 ⚠️ `emitEvents:false` en las dos escrituras es obligatorio: evita bucles si alguien
 vuelve a añadir un flow con trigger `event` sobre `site_settings`.
 
-⚠️ El cron se repetiría **cada año** el 10-sep. El `gate` lo hace inofensivo
+⚠️ El cron se repetiría **cada año** el 30-sep. El `gate` lo hace inofensivo
 (`campaign_sent` ya será `true`), pero conviene **desactivar el flow** tras el
 lanzamiento.
 
@@ -1115,7 +1174,7 @@ gastar la campaña real.
 
 Hacerlo en franja de bajo tráfico.
 
-### Fase 3 — Armado (D-1, 9-sep)
+### Fase 3 — Armado (D-1, 29-sep)
 
 Checklist de estado, verificable con los comandos de "Comandos de verificación":
 
@@ -1124,12 +1183,12 @@ Checklist de estado, verificable con los comandos de "Comandos de verificación"
       disparo es del Flow, dos relojes serían doble envío)
 - [ ] Campaña 4 → lista **3**; body idéntico a `emails/lanzamiento.html`
 - [ ] Lista 3 con los suscriptores esperados, todos `confirmed`
-- [ ] Flow `Lanzamiento Paco Merlos` **activo**, cron `0 0 7 10 9 *`, campaña **4**
+- [ ] Flow `Lanzamiento Paco Merlos` **activo**, cron `0 0 7 30 9 *`, campaña **4**
 - [ ] No queda ningún otro flow activo sobre `site_settings`
 - [ ] App prod: `NEXT_PUBLIC_CONTENT_ENV=production`, `LISTMONK_LIST_ID=3`
 - [ ] `main` mergeado a `prod` y desplegado (congelar cambios)
 
-### Fase 4 — Día D (10-sep, 09:00)
+### Fase 4 — Día D (30-sep, 09:00)
 
 Estar delante entre 08:55 y 09:15.
 
@@ -1161,8 +1220,8 @@ curl -X PUT https://lists.pacomerlos.com/api/campaigns/4/status \
 - Arreglar el chrome de `(legal)`: tras el lanzamiento las páginas legales deberían
   usar `SiteChrome`, no `HoldingLayout`. Corregir también el comentario falso de
   `SiteChrome.tsx`.
-- Retirar o reutilizar `CuentaAtras`/`Countdown` y `ComingSoon` (quedan como código
-  muerto en el camino `launched`).
+- `ComingSoon` queda como código muerto en el camino `launched` (`CuentaAtras` y
+  `Countdown` ya se eliminaron el 2026-10-14).
 
 ## Próximos pasos
 

@@ -8,7 +8,6 @@ import { contentEnv } from '@/lib/directus/status';
 import { buildCarouselOrder } from '@/utils/carousel-order';
 import PaquitosGalery from '@/components/layout/LandingPage/PaquitoGalery/paquitosGalery';
 import Encuentralos from '@/components/layout/LandingPage/Encuentralos/Encuentralos';
-import CuentaAtras from '@/components/layout/LandingPage/CuentaAtras/CuentaAtras';
 // Desactivado por ahora; se reutilizará en el futuro (ver PanelAcordeon.tsx / Panel.tsx).
 // import PanelAcordeon from '@/components/layout/LandingPage/PanelAcordeon/PanelAcordeon';
 import AnatomiaAlt from '@/components/layout/LandingPage/Anatomia/AnatomiaAlt';
@@ -57,8 +56,6 @@ export default async function Home() {
         ))}
       </HeroCarousel>
       <ConectorTop />
-      {/* Coming soon: la cuenta atrás va arriba, justo tras el hero. */}
-      {!showLocator && <CuentaAtras />}
       <PaquitosGalery paquitos={paquitos} />
       <AnatomiaAlt />
       {/* <PanelAcordeon /> */}

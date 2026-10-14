@@ -1,6 +1,5 @@
 import Reveal from '@/components/ui/Reveal';
 import SectionHeader from '@/components/ui/SectionHeader';
-import Countdown from '@/components/layout/LandingPage/CuentaAtras/Countdown';
 import PacomojiRain, {
   type Drop,
   pacomoji,
@@ -16,13 +15,17 @@ import NotifyCta from './NotifyCta';
  * Se revela la web completa el día del lanzamiento (`launch_status = launched`).
  *
  * La cabecera y el pie los aporta `HoldingLayout` (compartidos con las páginas
- * legales); aquí solo va el bloque central: pacomojis + SectionHeader + contador
- * + CTA de captación de email (`NotifyCta` → `EmailInput`, alta en Listmonk vía
+ * legales); aquí solo va el bloque central: pacomojis + SectionHeader + CTA de
+ * captación de email (`NotifyCta` → `EmailInput`, alta en Listmonk vía
  * `/api/notify`).
+ *
+ * Sin fecha ni cuenta atrás a propósito: el lanzamiento no tiene fecha cerrada.
+ * Si se fija una, no volver a hardcodearla aquí sin actualizar también el cron
+ * del Directus Flow y el correo de confirmación (ver CLAUDE.md).
  */
 
 // Disposición compacta para la holding page: los pacomojis se agrupan en una
-// banda más estrecha (más juntos entre sí) y cercana al contador, flanqueándolo
+// banda más estrecha (más juntos entre sí) y cercana al bloque central, flanqueándolo
 // por izquierda y derecha en vez de repartirse por todo el borde de la pantalla.
 const COMPACT_DROPS: Drop[] = [
   { img: pacomoji4, left: '16%', top: '34%', rot: '7deg', size: 112, drop: '-96vh' }, // extra sup. izq.
@@ -55,13 +58,9 @@ export default function ComingSoon() {
             barsColor="color-mix(in srgb, var(--paco-dark) 50%, transparent)"
           />
           <span className="text-lg md:text-xl mt-4 mb-8">
-            Los paquitos aterrizan el <b>10 de septiembre</b>
+            Déjanos tu email y serás de los primeros en saber cuándo aterrizan
           </span>
           <NotifyCta />
-        </Reveal>
-
-        <Reveal delay={3}>
-          <Countdown />
         </Reveal>
       </div>
     </div>
