@@ -75,10 +75,6 @@ export default function Privacidad() {
                 info@pacomerlos.com
               </Link>
             </li>
-            <li>
-              <strong>Teléfono:</strong>{' '}
-              <span className="text-paco-orange font-semibold">603 63 25 85</span>
-            </li>
           </ul>
         </Section>
 

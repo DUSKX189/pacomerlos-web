@@ -73,9 +73,6 @@ export default function AvisoLegal() {
               </Link>
             </li>
             <li>
-              <strong>Teléfono:</strong> <DataLabel>603 63 25 85</DataLabel>
-            </li>
-            <li>
               <strong>Nombre de dominio:</strong> <DataLabel>pacomerlos.com</DataLabel>
             </li>
           </ul>
